@@ -169,7 +169,7 @@ export default function IntegrationHub() {
       {/* Connected Platforms — live from DB */}
       <div>
         <h2 className="text-sm font-semibold text-foreground mb-3">Connected Platforms</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {platformDefs.map((platform, i) => {
             const ticketCount = platformStats?.[platform.source] ?? 0;
             const status = ticketCount > 0 ? "connected" : "disconnected";
@@ -179,7 +179,7 @@ export default function IntegrationHub() {
                 key={platform.name}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
+                transition={{ delay: i * 0.04 }}
               >
                 <Card
                   className="hover:border-primary/30 transition-colors cursor-pointer"
@@ -191,12 +191,17 @@ export default function IntegrationHub() {
                         <span className="text-2xl">{platform.icon}</span>
                         <div>
                           <p className="text-sm font-medium text-foreground">{platform.name}</p>
-                          <p className="text-[10px] text-muted-foreground font-mono">
-                            {ticketCount > 0
-                              ? `${ticketCount} tickets ingested`
-                              : "No tickets received yet"
-                            }
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[10px] text-muted-foreground font-mono">
+                              {ticketCount > 0
+                                ? `${ticketCount} tickets ingested`
+                                : "Click to setup"
+                              }
+                            </p>
+                            <Badge variant="outline" className="text-[8px] py-0 px-1 h-3.5 border-muted-foreground/30 text-muted-foreground">
+                              {platform.tier}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                       <Badge
