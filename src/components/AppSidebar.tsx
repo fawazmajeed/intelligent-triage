@@ -1,6 +1,6 @@
-import { Activity, Zap, BarChart3, Settings, Shield, Radio } from "lucide-react";
+import { Activity, Zap, BarChart3, Settings, Shield, Radio, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { title: "Live Queue", url: "/", icon: Radio },
@@ -10,7 +10,7 @@ const navItems = [
 ];
 
 export function AppSidebar() {
-  const location = useLocation();
+  const { user, signOut, isLicensed } = useAuth();
 
   return (
     <aside className="w-64 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
@@ -45,10 +45,22 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border space-y-3">
+        {user && (
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-sidebar-foreground/60 font-mono truncate max-w-[160px]">
+              {user.email}
+            </span>
+            <button onClick={signOut} className="text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors">
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
         <div className="flex items-center gap-2 text-[11px] text-sidebar-foreground/40">
           <Activity className="w-3 h-3 text-success" />
-          <span className="font-mono">System Operational</span>
+          <span className="font-mono">
+            {isLicensed ? "Licensed" : "Trial"}
+          </span>
         </div>
       </div>
     </aside>

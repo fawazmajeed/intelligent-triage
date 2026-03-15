@@ -18,18 +18,24 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_licensed: boolean
+          license_key: string | null
           name: string
           trial_expires_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_licensed?: boolean
+          license_key?: string | null
           name: string
           trial_expires_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_licensed?: boolean
+          license_key?: string | null
           name?: string
           trial_expires_at?: string
         }
