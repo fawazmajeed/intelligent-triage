@@ -26,14 +26,67 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are an expert ITIL incident triage AI. Given a raw IT incident description, analyze it and return a strict JSON object with the following fields:
-- category: One of "Network", "Access Management", "End User Computing", "Infrastructure", "Security", "Software", "Hardware"
-- severity: One of "Critical", "High", "Medium", "Low", "Info"
-- routing_group: The specific team to route to, e.g. "Tier 1 - Service Desk", "Tier 2 - Network Ops", "Tier 3 - Security Operations"
-- confidence_score: A decimal between 0 and 1 representing your confidence
-- business_impact: One of "Critical", "High", "Medium", "Low"
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-Return ONLY the JSON object, no markdown, no explanation.`;
+    // Fetch org-specific categories
+    const { data: orgCategories } = await supabase
+      .from("org_categories")
+      .select("name")
+      .eq("organization_id", organization_id);
+
+    // Fetch org-specific teams
+    const { data: orgTeams } = await supabase
+      .from("org_teams")
+      .select("name")
+      .eq("organization_id", organization_id);
+
+    // Fetch up to 20 training examples (most recent) for few-shot context
+    const { data: trainingExamples } = await supabase
+      .from("org_training_examples")
+      .select("description, category, team, severity")
+      .eq("organization_id", organization_id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    // Build dynamic category list
+    const defaultCategories = ["Network", "Access Management", "End User Computing", "Infrastructure", "Security", "Software", "Hardware"];
+    const categoryList = orgCategories && orgCategories.length > 0
+      ? orgCategories.map((c) => c.name)
+      : defaultCategories;
+
+    // Build dynamic team guidance
+    const teamGuidance = orgTeams && orgTeams.length > 0
+      ? `Route to one of these teams: ${orgTeams.map((t) => `"${t.name}"`).join(", ")}`
+      : `Suggest an appropriate team name such as "Tier 1 - Service Desk", "Tier 2 - Network Ops", "Tier 3 - Security Operations"`;
+
+    // Build few-shot examples block
+    let fewShotBlock = "";
+    if (trainingExamples && trainingExamples.length > 0) {
+      const examples = trainingExamples.map((ex, i) => {
+        let line = `Example ${i + 1}:\n  Description: "${ex.description}"`;
+        line += `\n  → Category: "${ex.category}"`;
+        if (ex.team) line += `, Team: "${ex.team}"`;
+        if (ex.severity) line += `, Severity: "${ex.severity}"`;
+        return line;
+      }).join("\n\n");
+      fewShotBlock = `\n\nHere are real examples from this organization's historical tickets. Use these to understand their classification patterns:\n\n${examples}\n\nUse these examples as strong guidance for how this organization classifies tickets. Match their patterns closely.`;
+    }
+
+    const systemPrompt = `You are an expert ITIL incident triage AI. Given a raw IT incident description, analyze it and classify it accurately.
+
+Categories (use ONLY these): ${categoryList.map((c) => `"${c}"`).join(", ")}
+
+${teamGuidance}
+
+Severity levels: "Critical", "High", "Medium", "Low", "Info"
+Business impact levels: "Critical", "High", "Medium", "Low"
+
+Return your classification using the categorize_incident function.${fewShotBlock}`;
+
+    // Build enum for categories
+    const categoryEnum = categoryList;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -52,11 +105,11 @@ Return ONLY the JSON object, no markdown, no explanation.`;
             type: "function",
             function: {
               name: "categorize_incident",
-              description: "Categorize an IT incident with ITIL classification",
+              description: "Categorize an IT incident with organization-specific classification",
               parameters: {
                 type: "object",
                 properties: {
-                  category: { type: "string", enum: ["Network", "Access Management", "End User Computing", "Infrastructure", "Security", "Software", "Hardware"] },
+                  category: { type: "string", enum: categoryEnum },
                   severity: { type: "string", enum: ["Critical", "High", "Medium", "Low", "Info"] },
                   routing_group: { type: "string" },
                   confidence_score: { type: "number", minimum: 0, maximum: 1 },
@@ -90,7 +143,7 @@ Return ONLY the JSON object, no markdown, no explanation.`;
 
     const aiResult = await response.json();
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-    
+
     if (!toolCall) {
       throw new Error("No tool call in AI response");
     }
@@ -98,10 +151,6 @@ Return ONLY the JSON object, no markdown, no explanation.`;
     const prediction = JSON.parse(toolCall.function.arguments);
 
     // Store in database
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     const { data: ticket, error: dbError } = await supabase
       .from("tickets")
       .insert({
