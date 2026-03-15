@@ -143,6 +143,44 @@ export default function IntegrationHub() {
     }
   };
 
+  const handleManualSubmit = async () => {
+    if (!organization) {
+      toast({ title: "No organization found", description: "Please log in again.", variant: "destructive" });
+      return;
+    }
+    if (!manualDesc.trim()) {
+      toast({ title: "Description required", description: "Enter a ticket description to test.", variant: "destructive" });
+      return;
+    }
+    setSubmittingManual(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("categorize-ticket", {
+        body: {
+          raw_description: manualDesc.trim(),
+          source_system: manualSource,
+          organization_id: organization.id,
+        },
+      });
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["ticket-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["ticket-count-roi"] });
+      queryClient.invalidateQueries({ queryKey: ["platform-stats"] });
+
+      toast({
+        title: "Ticket submitted & categorized",
+        description: `Category: ${data?.predicted_category || "—"} · Team: ${data?.predicted_team || "—"} · Severity: ${data?.predicted_severity || "—"}`,
+      });
+      setManualDesc("");
+      setShowManualEntry(false);
+    } catch (e) {
+      toast({ title: "Submission failed", description: String(e), variant: "destructive" });
+    } finally {
+      setSubmittingManual(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6 max-w-[1200px]">
       <div className="flex items-center justify-between">
@@ -150,19 +188,84 @@ export default function IntegrationHub() {
           <h1 className="text-xl font-bold text-foreground">Integration Hub</h1>
           <p className="text-xs text-muted-foreground font-mono mt-0.5">Connect your ITSM platforms to the AI triage pipeline</p>
         </div>
-        <Button
-          onClick={handleSimulate}
-          disabled={simulating}
-          className="gap-2"
-        >
-          {simulating ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Play className="w-4 h-4" />
-          )}
-          {simulating ? "Simulating…" : "Simulate Incoming Traffic"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowManualEntry(!showManualEntry)}
+            className="gap-2"
+          >
+            {showManualEntry ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+            {showManualEntry ? "Cancel" : "Test Single Ticket"}
+          </Button>
+          <Button
+            onClick={handleSimulate}
+            disabled={simulating}
+            className="gap-2"
+          >
+            {simulating ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            {simulating ? "Simulating…" : "Simulate Traffic"}
+          </Button>
+        </div>
       </div>
+
+      {/* Manual Single Ticket Entry */}
+      {showManualEntry && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-primary/30">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-primary" />
+                Submit a Test Ticket
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Enter a ticket description to see how TriageFlow AI categorizes and routes it in real-time.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                placeholder="e.g. VPN tunnel dropping every 15 minutes for remote sales team on Windows laptops"
+                value={manualDesc}
+                onChange={(e) => setManualDesc(e.target.value)}
+                className="text-sm min-h-[80px] resize-none"
+              />
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Source:</span>
+                  <Select value={manualSource} onValueChange={setManualSource}>
+                    <SelectTrigger className="h-8 text-xs w-[180px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {platformDefs.map((p) => (
+                        <SelectItem key={p.source} value={p.source} className="text-xs">
+                          {p.icon} {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={handleManualSubmit}
+                  disabled={submittingManual || !manualDesc.trim()}
+                  size="sm"
+                  className="gap-2"
+                >
+                  {submittingManual ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  {submittingManual ? "Processing…" : "Submit & Categorize"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Webhook URL */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
