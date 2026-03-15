@@ -39,6 +39,7 @@ export default function IntegrationHub() {
   const [simulating, setSimulating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { organization } = useAuth();
   const webhookUrl = `https://api.triageflow.ai/webhooks/ingest/org_k7x9m2p4q1`;
 
   // Live platform stats from database
