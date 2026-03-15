@@ -37,6 +37,7 @@ const sampleDescriptions = [
 export default function IntegrationHub() {
   const [copied, setCopied] = useState(false);
   const [simulating, setSimulating] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<typeof platformDefs[number] | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { organization } = useAuth();
