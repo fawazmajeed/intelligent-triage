@@ -182,32 +182,36 @@ export default function IntegrationHub() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-[1200px]">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-[1200px]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Integration Hub</h1>
-          <p className="text-xs text-muted-foreground font-mono mt-0.5">Connect your ITSM platforms to the AI triage pipeline</p>
+          <h1 className="text-lg md:text-xl font-bold text-foreground">Integration Hub</h1>
+          <p className="text-[10px] md:text-xs text-muted-foreground font-mono mt-0.5">Connect your ITSM platforms to the AI triage pipeline</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => setShowManualEntry(!showManualEntry)}
-            className="gap-2"
+            className="gap-1.5 text-xs"
           >
-            {showManualEntry ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
-            {showManualEntry ? "Cancel" : "Test Single Ticket"}
+            {showManualEntry ? <X className="w-3.5 h-3.5" /> : <PlusCircle className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{showManualEntry ? "Cancel" : "Test Single Ticket"}</span>
+            <span className="sm:hidden">{showManualEntry ? "Cancel" : "Test"}</span>
           </Button>
           <Button
             onClick={handleSimulate}
             disabled={simulating}
-            className="gap-2"
+            size="sm"
+            className="gap-1.5 text-xs"
           >
             {simulating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <Play className="w-4 h-4" />
+              <Play className="w-3.5 h-3.5" />
             )}
-            {simulating ? "Simulating…" : "Simulate Traffic"}
+            <span className="hidden sm:inline">{simulating ? "Simulating…" : "Simulate Traffic"}</span>
+            <span className="sm:hidden">{simulating ? "…" : "Simulate"}</span>
           </Button>
         </div>
       </div>
