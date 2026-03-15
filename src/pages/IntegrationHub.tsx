@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Copy, Check, Webhook, Play, Loader2 } from "lucide-react";
+import PlatformDetailDialog from "@/components/PlatformDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,7 @@ const sampleDescriptions = [
 export default function IntegrationHub() {
   const [copied, setCopied] = useState(false);
   const [simulating, setSimulating] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<typeof platformDefs[number] | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { organization } = useAuth();
@@ -174,7 +176,10 @@ export default function IntegrationHub() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
               >
-                <Card className="hover:border-primary/30 transition-colors">
+                <Card
+                  className="hover:border-primary/30 transition-colors cursor-pointer"
+                  onClick={() => setSelectedPlatform(platform)}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -207,6 +212,17 @@ export default function IntegrationHub() {
           })}
         </div>
       </div>
+
+      {/* Platform Detail Dialog */}
+      {selectedPlatform && (
+        <PlatformDetailDialog
+          open={!!selectedPlatform}
+          onOpenChange={(open) => !open && setSelectedPlatform(null)}
+          platform={selectedPlatform}
+          ticketCount={platformStats?.[selectedPlatform.source] ?? 0}
+          webhookUrl={webhookUrl}
+        />
+      )}
     </div>
   );
 }
