@@ -1,31 +1,66 @@
 import { motion } from "framer-motion";
 import { Ticket, Brain, Clock } from "lucide-react";
-
-const metrics = [
-  {
-    label: "Tickets Processed Today",
-    value: "284",
-    change: "+12%",
-    icon: Ticket,
-    positive: true,
-  },
-  {
-    label: "Avg. AI Confidence Score",
-    value: "93.2%",
-    change: "+1.4%",
-    icon: Brain,
-    positive: true,
-  },
-  {
-    label: "Estimated Hours Saved",
-    value: "18.5h",
-    change: "≈ $1,295",
-    icon: Clock,
-    positive: true,
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function MetricsRibbon() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["ticket-metrics"],
+    queryFn: async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { count } = await supabase
+        .from("tickets")
+        .select("*", { count: "exact", head: true });
+
+      const { data: scores } = await supabase
+        .from("tickets")
+        .select("confidence_score")
+        .not("confidence_score", "is", null);
+
+      const totalTickets = count ?? 0;
+      const avgConfidence = scores && scores.length > 0
+        ? scores.reduce((sum, t) => sum + (t.confidence_score ?? 0), 0) / scores.length
+        : 0;
+      const hoursSaved = totalTickets * 0.065; // ~4 min saved per ticket
+
+      return { totalTickets, avgConfidence, hoursSaved };
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  const metrics = [
+    {
+      label: "Tickets Processed",
+      value: data?.totalTickets.toLocaleString() ?? "0",
+      change: "All time",
+      icon: Ticket,
+    },
+    {
+      label: "Avg. AI Confidence Score",
+      value: `${((data?.avgConfidence ?? 0) * 100).toFixed(1)}%`,
+      change: "Across all tickets",
+      icon: Brain,
+    },
+    {
+      label: "Estimated Hours Saved",
+      value: `${(data?.hoursSaved ?? 0).toFixed(1)}h`,
+      change: `≈ $${Math.round((data?.hoursSaved ?? 0) * 70)}`,
+      icon: Clock,
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {metrics.map((metric, i) => (
@@ -45,7 +80,7 @@ export function MetricsRibbon() {
               <metric.icon className="w-4.5 h-4.5 text-primary" />
             </div>
           </div>
-          <p className="text-xs font-mono text-success mt-2">{metric.change} vs yesterday</p>
+          <p className="text-xs font-mono text-success mt-2">{metric.change}</p>
         </motion.div>
       ))}
     </div>
