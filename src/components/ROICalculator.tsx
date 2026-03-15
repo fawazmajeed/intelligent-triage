@@ -9,6 +9,7 @@ import { useCurrency } from "@/hooks/use-currency";
 
 export function ROICalculator() {
   const { formatCurrency, currency } = useCurrency();
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data: ticketCount, isLoading } = useQuery({
     queryKey: ["ticket-count-roi"],
