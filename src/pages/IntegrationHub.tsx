@@ -1,22 +1,62 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Copy, Check, Webhook, Zap, ExternalLink } from "lucide-react";
+import { Copy, Check, Webhook, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-const integrations = [
-  { name: "Jira Service Management", icon: "🔵", status: "connected", tickets: 142 },
-  { name: "ServiceNow", icon: "🟢", status: "connected", tickets: 89 },
-  { name: "Zendesk", icon: "🟡", status: "pending", tickets: 0 },
-  { name: "Freshservice", icon: "🟣", status: "disconnected", tickets: 0 },
+const platformDefs = [
+  { name: "Jira Service Management", source: "Jira", icon: "🔵" },
+  { name: "ServiceNow", source: "ServiceNow", icon: "🟢" },
+  { name: "Zendesk", source: "Zendesk", icon: "🟡" },
+  { name: "Freshservice", source: "Freshservice", icon: "🟣" },
+];
+
+const sampleDescriptions = [
+  "VPN tunnel dropping every 15 minutes for remote sales team on Windows laptops",
+  "SAP GUI login failing with SSO token expired error for 12 users in accounting",
+  "Exchange mailbox quota exceeded for VP of Marketing, cannot send critical campaign emails",
+  "AWS Lambda function timing out on payment processing microservice in prod",
+  "Ransomware alert triggered on endpoint in HR department workstation",
+  "Printer spooler service crashing on print server affecting entire 3rd floor",
+  "Cisco switch port flapping on core switch causing intermittent network outages",
+  "New hire needs Active Directory account, O365 license, and VPN access by Monday",
+  "SQL Server replication lag of 45 minutes between primary and DR site",
+  "Zoom Rooms firmware update bricked conference room displays in Building A",
+  "Multi-factor authentication app not syncing codes after phone replacement",
+  "SharePoint Online document library permissions broken after tenant migration",
+  "Jenkins build pipeline failing with Docker registry authentication errors",
+  "Citrix session disconnects during peak hours affecting 200+ call center agents",
+  "SSL certificate on customer-facing portal expired, showing browser warnings",
 ];
 
 export default function IntegrationHub() {
   const [copied, setCopied] = useState(false);
+  const [simulating, setSimulating] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const webhookUrl = `https://api.triageflow.ai/webhooks/ingest/org_k7x9m2p4q1`;
+
+  // Live platform stats from database
+  const { data: platformStats } = useQuery({
+    queryKey: ["platform-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("source_system");
+      if (error) throw error;
+
+      const counts: Record<string, number> = {};
+      data.forEach((t) => {
+        counts[t.source_system] = (counts[t.source_system] || 0) + 1;
+      });
+      return counts;
+    },
+    refetchInterval: 5000,
+  });
 
   const handleCopy = () => {
     navigator.clipboard.writeText(webhookUrl);
@@ -25,11 +65,63 @@ export default function IntegrationHub() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleSimulate = async () => {
+    setSimulating(true);
+    const sources = ["Jira", "ServiceNow", "Zendesk", "Freshservice"];
+    const count = 3 + Math.floor(Math.random() * 3); // 3-5 tickets
+
+    try {
+      const promises = Array.from({ length: count }).map(() => {
+        const desc = sampleDescriptions[Math.floor(Math.random() * sampleDescriptions.length)];
+        const source = sources[Math.floor(Math.random() * sources.length)];
+
+        return supabase.functions.invoke("categorize-ticket", {
+          body: {
+            raw_description: desc,
+            source_system: source,
+            organization_id: "00000000-0000-0000-0000-000000000001",
+          },
+        });
+      });
+
+      const results = await Promise.allSettled(promises);
+      const succeeded = results.filter((r) => r.status === "fulfilled" && !(r.value as any).error).length;
+
+      // Invalidate queries so the dashboard refreshes
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["ticket-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["platform-stats"] });
+
+      toast({
+        title: `Simulated ${succeeded} ticket${succeeded !== 1 ? "s" : ""}`,
+        description: "AI categorized and routed the incoming incidents. Check the Live Queue.",
+      });
+    } catch (e) {
+      toast({ title: "Simulation failed", description: String(e), variant: "destructive" });
+    } finally {
+      setSimulating(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6 max-w-[1200px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Integration Hub</h1>
-        <p className="text-xs text-muted-foreground font-mono mt-0.5">Connect your ITSM platforms to the AI triage pipeline</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Integration Hub</h1>
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">Connect your ITSM platforms to the AI triage pipeline</p>
+        </div>
+        <Button
+          onClick={handleSimulate}
+          disabled={simulating}
+          className="gap-2"
+        >
+          {simulating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+          {simulating ? "Simulating…" : "Simulate Incoming Traffic"}
+        </Button>
       </div>
 
       {/* Webhook URL */}
@@ -60,49 +152,52 @@ export default function IntegrationHub() {
         </Card>
       </motion.div>
 
-      {/* Connected Platforms */}
+      {/* Connected Platforms — live from DB */}
       <div>
         <h2 className="text-sm font-semibold text-foreground mb-3">Connected Platforms</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {integrations.map((integration, i) => (
-            <motion.div
-              key={integration.name}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-            >
-              <Card className="hover:border-primary/30 transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{integration.icon}</span>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{integration.name}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono">
-                          {integration.status === "connected" 
-                            ? `${integration.tickets} tickets ingested today`
-                            : integration.status === "pending" ? "Awaiting first webhook" : "Not configured"
-                          }
-                        </p>
+          {platformDefs.map((platform, i) => {
+            const ticketCount = platformStats?.[platform.source] ?? 0;
+            const status = ticketCount > 0 ? "connected" : "disconnected";
+
+            return (
+              <motion.div
+                key={platform.name}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+              >
+                <Card className="hover:border-primary/30 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{platform.icon}</span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{platform.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">
+                            {ticketCount > 0
+                              ? `${ticketCount} tickets ingested`
+                              : "No tickets received yet"
+                            }
+                          </p>
+                        </div>
                       </div>
+                      <Badge
+                        variant={status === "connected" ? "default" : "outline"}
+                        className={`text-[10px] ${
+                          status === "connected"
+                            ? "bg-success/15 text-success border-success/30"
+                            : ""
+                        }`}
+                      >
+                        {status}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant={integration.status === "connected" ? "default" : "outline"}
-                      className={`text-[10px] ${
-                        integration.status === "connected" 
-                          ? "bg-success/15 text-success border-success/30" 
-                          : integration.status === "pending"
-                          ? "bg-warning/15 text-warning border-warning/30"
-                          : ""
-                      }`}
-                    >
-                      {integration.status}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>
