@@ -107,8 +107,16 @@ export default function AIConfigSection() {
       if (lines.length < 2) throw new Error("CSV must have a header row and at least one data row.");
 
       const header = lines[0].toLowerCase();
-      // Find column indices - flexible header matching
-      const cols = header.split(",").map((h) => h.trim().replace(/"/g, ""));
+      const cols: string[] = [];
+      let cur = "";
+      let inQ = false;
+      for (let i = 0; i < header.length; i++) {
+        const ch = header[i];
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === ',' && !inQ) { cols.push(cur.trim().replace(/"/g, "")); cur = ""; }
+        else { cur += ch; }
+      }
+      cols.push(cur.trim().replace(/"/g, ""));
       const descIdx = cols.findIndex((c) => c.includes("description") || c.includes("summary") || c.includes("subject") || c.includes("short_description"));
       const catIdx = cols.findIndex((c) => c.includes("category") || c.includes("type"));
       const teamIdx = cols.findIndex((c) => c.includes("team") || c.includes("group") || c.includes("assignment") || c.includes("assigned"));
