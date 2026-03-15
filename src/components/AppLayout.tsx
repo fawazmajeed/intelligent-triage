@@ -10,7 +10,7 @@ export function AppLayout() {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <TrialBanner />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto pt-[52px] md:pt-0">
             <Outlet />
           </main>
         </div>
