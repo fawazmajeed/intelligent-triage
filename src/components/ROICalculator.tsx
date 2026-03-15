@@ -91,7 +91,7 @@ export function ROICalculator() {
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-2 gap-4 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
         <div>
           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">
             Monthly Ticket Volume {isLoading && <Loader2 className="w-3 h-3 inline animate-spin ml-1" />}
