@@ -11,10 +11,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const platformDefs = [
-  { name: "Jira Service Management", source: "Jira", icon: "🔵" },
-  { name: "ServiceNow", source: "ServiceNow", icon: "🟢" },
-  { name: "Zendesk", source: "Zendesk", icon: "🟡" },
-  { name: "Freshservice", source: "Freshservice", icon: "🟣" },
+  { name: "Jira Service Management", source: "Jira", icon: "🔵", tier: "Enterprise" },
+  { name: "ServiceNow", source: "ServiceNow", icon: "🟢", tier: "Enterprise" },
+  { name: "Zendesk", source: "Zendesk", icon: "🟡", tier: "SMB / Enterprise" },
+  { name: "Freshservice", source: "Freshservice", icon: "🟣", tier: "SMB" },
+  { name: "ManageEngine ServiceDesk Plus", source: "ManageEngine", icon: "🔴", tier: "SMB / Enterprise" },
+  { name: "Zoho Desk", source: "ZohoDesk", icon: "🟠", tier: "SMB" },
+  { name: "BMC Helix ITSM", source: "BMCHelix", icon: "⚫", tier: "Enterprise" },
+  { name: "SolarWinds Service Desk", source: "SolarWinds", icon: "🟤", tier: "SMB / Enterprise" },
+  { name: "HaloITSM", source: "HaloITSM", icon: "🔷", tier: "SMB" },
 ];
 
 const sampleDescriptions = [

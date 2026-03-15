@@ -10,15 +10,14 @@ interface PlatformDetailDialogProps {
     name: string;
     source: string;
     icon: string;
+    tier?: string;
   };
   ticketCount: number;
   webhookUrl: string;
 }
 
-const connectionGuides: Record<string, { apiBase: string; docsUrl: string; steps: string[] }> = {
+const connectionGuides: Record<string, { steps: string[]; disconnectSteps: string[] }> = {
   Jira: {
-    apiBase: "https://your-instance.atlassian.net",
-    docsUrl: "https://support.atlassian.com/jira-cloud-administration/docs/manage-webhooks/",
     steps: [
       "Log in to your Jira Cloud instance as an admin.",
       "Navigate to Settings → System → Webhooks.",
@@ -26,12 +25,14 @@ const connectionGuides: Record<string, { apiBase: string; docsUrl: string; steps
       "Select events: Issue Created, Issue Updated.",
       "Set the JQL filter to the project(s) you want to triage (e.g. project = ITSM).",
       "Under 'Headers', add: Authorization: Bearer <your_triageflow_api_key> (found in TriageFlow Settings).",
-      "Save the webhook and send a test event.",
+      "Save the webhook and send a test event to verify connectivity.",
+    ],
+    disconnectSteps: [
+      "Navigate to Settings → System → Webhooks in your Jira Cloud admin.",
+      "Find the TriageFlow webhook and click Delete or Disable.",
     ],
   },
   ServiceNow: {
-    apiBase: "https://your-instance.service-now.com",
-    docsUrl: "https://docs.servicenow.com/bundle/washingtondc-integrate-applications/page/administer/notification/concept/outbound-rest-message.html",
     steps: [
       "Log in to your ServiceNow instance as an admin.",
       "Navigate to System Web Services → Outbound → REST Message.",
@@ -41,10 +42,12 @@ const connectionGuides: Record<string, { apiBase: string; docsUrl: string; steps
       "Create a default POST HTTP Method with Content-Type: application/json.",
       "Create a Business Rule on the Incident table (on insert) that calls this REST message with the ticket payload.",
     ],
+    disconnectSteps: [
+      "Deactivate the Business Rule on the Incident table that triggers the REST message.",
+      "Optionally delete the 'TriageFlow AI' REST Message under System Web Services → Outbound.",
+    ],
   },
   Zendesk: {
-    apiBase: "https://your-subdomain.zendesk.com",
-    docsUrl: "https://developer.zendesk.com/documentation/event-connectors/webhooks/webhooks/",
     steps: [
       "Log in to Zendesk Admin Center.",
       "Go to Apps and Integrations → Webhooks → Create webhook.",
@@ -52,12 +55,14 @@ const connectionGuides: Record<string, { apiBase: string; docsUrl: string; steps
       "Set Request method: POST, Request format: JSON.",
       "Add header: Authorization = Bearer <your_triageflow_api_key>.",
       "Go to Business Rules → Triggers → Add trigger.",
-      "Set conditions (e.g. 'Ticket is Created') and add the action 'Notify webhook → TriageFlow AI' with the JSON body template.",
+      "Set conditions (e.g. 'Ticket is Created') and action 'Notify webhook → TriageFlow AI' with ticket JSON body.",
+    ],
+    disconnectSteps: [
+      "Go to Admin Center → Webhooks, find 'TriageFlow AI', and delete it.",
+      "Remove the associated trigger under Business Rules → Triggers.",
     ],
   },
   Freshservice: {
-    apiBase: "https://your-domain.freshservice.com",
-    docsUrl: "https://support.freshservice.com/en/support/solutions/articles/50000004706-webhook-integration",
     steps: [
       "Log in to Freshservice as an admin.",
       "Go to Admin → Workflow Automator → Create new automator.",
@@ -66,6 +71,89 @@ const connectionGuides: Record<string, { apiBase: string; docsUrl: string; steps
       "Set the Request Type to POST and paste the TriageFlow Webhook URL.",
       "Add header: Authorization = Bearer <your_triageflow_api_key>.",
       "Map ticket fields (description, priority, requester) to the JSON body and activate the automator.",
+    ],
+    disconnectSteps: [
+      "Go to Admin → Workflow Automator and find the TriageFlow rule.",
+      "Deactivate or delete the workflow automator.",
+    ],
+  },
+  ManageEngine: {
+    steps: [
+      "Log in to ManageEngine ServiceDesk Plus as an admin.",
+      "Navigate to Admin → Developer Space → Webhooks.",
+      "Click 'Add Webhook' and name it 'TriageFlow AI'.",
+      "Set the Callback URL to the TriageFlow Webhook URL shown above.",
+      "Set Method to POST and Content-Type to application/json.",
+      "Add header: Authorization = Bearer <your_triageflow_api_key>.",
+      "Select the events to trigger on: Request Created, Request Updated.",
+      "Map the payload fields (subject, description, priority, site) and save the webhook.",
+    ],
+    disconnectSteps: [
+      "Navigate to Admin → Developer Space → Webhooks.",
+      "Find the 'TriageFlow AI' webhook and delete or disable it.",
+    ],
+  },
+  ZohoDesk: {
+    steps: [
+      "Log in to Zoho Desk as an admin.",
+      "Go to Setup → Developer Space → Webhooks.",
+      "Click 'Create Webhook' and name it 'TriageFlow AI'.",
+      "Set the URL to the TriageFlow Webhook URL shown above.",
+      "Set Method to POST and Authentication to 'Custom Header': Authorization = Bearer <your_triageflow_api_key>.",
+      "Under 'Entity', select 'Tickets' and event 'Create'.",
+      "Configure the payload with ticket fields (subject, description, priority, department) and enable the webhook.",
+    ],
+    disconnectSteps: [
+      "Go to Setup → Developer Space → Webhooks.",
+      "Find 'TriageFlow AI' and delete or disable the webhook.",
+    ],
+  },
+  BMCHelix: {
+    steps: [
+      "Log in to BMC Helix ITSM as an admin.",
+      "Navigate to Administration → Integration → Webhook Definitions.",
+      "Click 'Register Webhook' and set the name to 'TriageFlow AI'.",
+      "Set the Callback URL to the TriageFlow Webhook URL shown above.",
+      "Select events: Create Record (Incident form).",
+      "Configure payload fields (Description, Impact, Urgency, Assigned Group) using payloadFieldIds.",
+      "Add OAuth 2.0 or custom header authentication: Authorization = Bearer <your_triageflow_api_key>.",
+      "Save and test the webhook registration with a sample incident.",
+    ],
+    disconnectSteps: [
+      "Navigate to Administration → Integration → Webhook Definitions.",
+      "Find the 'TriageFlow AI' webhook and delete it via the DELETE API or admin UI.",
+    ],
+  },
+  SolarWinds: {
+    steps: [
+      "Log in to SolarWinds Service Desk as an admin.",
+      "Navigate to Setup → Integration → Webhooks.",
+      "Click 'New Webhook' and name it 'TriageFlow AI'.",
+      "Set the Target URL to the TriageFlow Webhook URL shown above.",
+      "Set HTTP Method to POST and Content-Type to application/json.",
+      "Add header: Authorization = Bearer <your_triageflow_api_key>.",
+      "Select trigger events: Incident Created.",
+      "Map the relevant fields (title, description, priority, category) and activate the webhook.",
+    ],
+    disconnectSteps: [
+      "Navigate to Setup → Integration → Webhooks.",
+      "Find the 'TriageFlow AI' webhook and delete or deactivate it.",
+    ],
+  },
+  HaloITSM: {
+    steps: [
+      "Log in to your HaloITSM portal as an admin.",
+      "Navigate to Configuration (gear icon) → Integrations → Webhooks.",
+      "Click 'New' to create a new webhook.",
+      "Set the Payload URL to the TriageFlow Webhook URL shown above.",
+      "Set Method to POST and Content-Type to application/json.",
+      "Add header: Authorization = Bearer <your_triageflow_api_key>.",
+      "Configure the trigger event for 'Ticket Created' and map ticket fields to the JSON payload.",
+      "Save and test the webhook with a sample ticket.",
+    ],
+    disconnectSteps: [
+      "Navigate to Configuration → Integrations → Webhooks.",
+      "Find the TriageFlow webhook and delete or disable it.",
     ],
   },
 };
@@ -90,6 +178,11 @@ export default function PlatformDetailDialog({
               <DialogTitle className="text-base">{platform.name}</DialogTitle>
               <DialogDescription className="text-xs font-mono">
                 Integration with TriageFlow AI
+                {platform.tier && (
+                  <Badge variant="outline" className="ml-2 text-[9px] py-0 px-1.5">
+                    {platform.tier}
+                  </Badge>
+                )}
               </DialogDescription>
             </div>
           </div>
@@ -182,21 +275,18 @@ export default function PlatformDetailDialog({
           <div className="text-xs text-foreground/80 space-y-2">
             <p>To stop sending ticket data to TriageFlow AI:</p>
             <ol className="space-y-1.5 ml-1">
+              {guide?.disconnectSteps.map((step, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-bold mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
               <li className="flex gap-2">
-                <span className="shrink-0 w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-bold mt-0.5">1</span>
-                <span>Go to your <strong>{platform.name}</strong> admin panel.</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="shrink-0 w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-bold mt-0.5">2</span>
-                <span>
-                  {platform.source === "Jira" && "Navigate to Settings → System → Webhooks and delete or disable the TriageFlow webhook."}
-                  {platform.source === "ServiceNow" && "Navigate to the Business Rule on the Incident table and deactivate it, then delete the REST Message."}
-                  {platform.source === "Zendesk" && "Go to Admin Center → Webhooks, find 'TriageFlow AI', and delete it. Also remove the associated trigger."}
-                  {platform.source === "Freshservice" && "Go to Admin → Workflow Automator, find the TriageFlow rule, and deactivate or delete it."}
+                <span className="shrink-0 w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-bold mt-0.5">
+                  {(guide?.disconnectSteps.length ?? 0) + 1}
                 </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="shrink-0 w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-bold mt-0.5">3</span>
                 <span>No further tickets will be sent. Existing data in TriageFlow remains available for audit.</span>
               </li>
             </ol>
