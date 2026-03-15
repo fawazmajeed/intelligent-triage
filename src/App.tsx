@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "./components/AppLayout";
 import Index from "./pages/Index";
 import IntegrationHub from "./pages/IntegrationHub";
@@ -26,7 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/expired" element={<Expired />} />
-            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/integrations" element={<IntegrationHub />} />
               <Route path="/analytics" element={<Analytics />} />
