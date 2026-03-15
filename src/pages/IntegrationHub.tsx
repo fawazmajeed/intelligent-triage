@@ -236,7 +236,7 @@ export default function IntegrationHub() {
                 onChange={(e) => setManualDesc(e.target.value)}
                 className="text-sm min-h-[80px] resize-none"
               />
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div className="flex items-center gap-2 flex-1">
                   <span className="text-xs text-muted-foreground whitespace-nowrap">Source:</span>
                   <Select value={manualSource} onValueChange={setManualSource}>
