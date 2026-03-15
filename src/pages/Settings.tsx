@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { CURRENCIES } from "@/hooks/use-currency";
+import AIConfigSection from "@/components/AIConfigSection";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -113,6 +114,11 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* AI Triage Configuration */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+        <AIConfigSection />
       </motion.div>
 
       {/* License Management */}
