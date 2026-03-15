@@ -80,7 +80,7 @@ export default function IntegrationHub() {
       return;
     }
     setSimulating(true);
-    const sources = ["Jira", "ServiceNow", "Zendesk", "Freshservice"];
+    const sources = ["Jira", "ServiceNow", "Zendesk", "Freshservice", "ManageEngine", "ZohoDesk", "BMCHelix", "SolarWinds", "HaloITSM"];
     const count = 3 + Math.floor(Math.random() * 3); // 3-5 tickets
 
     try {
