@@ -91,7 +91,7 @@ export function ROICalculator() {
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-2 gap-4 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
         <div>
           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">
             Monthly Ticket Volume {isLoading && <Loader2 className="w-3 h-3 inline animate-spin ml-1" />}
@@ -121,7 +121,7 @@ export function ROICalculator() {
           <TrendingUp className="w-4 h-4 text-primary" />
           <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Projected Monthly Savings</span>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <p className="text-xl font-bold font-mono text-primary">{formatCurrency(Math.round(moneySaved))}</p>
             <p className="text-[10px] text-muted-foreground">Cost Savings</p>
