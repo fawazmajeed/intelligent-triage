@@ -23,6 +23,7 @@ export function TriageTable() {
       if (error) throw error;
       return data as Ticket[];
     },
+    refetchInterval: 10000,
   });
 
   if (isLoading) {

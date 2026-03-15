@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const platformDefs = [
   { name: "Jira Service Management", source: "Jira", icon: "🔵" },
@@ -38,6 +39,7 @@ export default function IntegrationHub() {
   const [simulating, setSimulating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { organization } = useAuth();
   const webhookUrl = `https://api.triageflow.ai/webhooks/ingest/org_k7x9m2p4q1`;
 
   // Live platform stats from database
@@ -66,6 +68,10 @@ export default function IntegrationHub() {
   };
 
   const handleSimulate = async () => {
+    if (!organization) {
+      toast({ title: "No organization found", description: "Please log in again.", variant: "destructive" });
+      return;
+    }
     setSimulating(true);
     const sources = ["Jira", "ServiceNow", "Zendesk", "Freshservice"];
     const count = 3 + Math.floor(Math.random() * 3); // 3-5 tickets
@@ -79,7 +85,7 @@ export default function IntegrationHub() {
           body: {
             raw_description: desc,
             source_system: source,
-            organization_id: "00000000-0000-0000-0000-000000000001",
+            organization_id: organization.id,
           },
         });
       });
@@ -90,6 +96,7 @@ export default function IntegrationHub() {
       // Invalidate queries so the dashboard refreshes
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["ticket-count-roi"] });
       queryClient.invalidateQueries({ queryKey: ["platform-stats"] });
 
       toast({
