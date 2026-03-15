@@ -68,6 +68,10 @@ export default function IntegrationHub() {
   };
 
   const handleSimulate = async () => {
+    if (!organization) {
+      toast({ title: "No organization found", description: "Please log in again.", variant: "destructive" });
+      return;
+    }
     setSimulating(true);
     const sources = ["Jira", "ServiceNow", "Zendesk", "Freshservice"];
     const count = 3 + Math.floor(Math.random() * 3); // 3-5 tickets
@@ -81,7 +85,7 @@ export default function IntegrationHub() {
           body: {
             raw_description: desc,
             source_system: source,
-            organization_id: "00000000-0000-0000-0000-000000000001",
+            organization_id: organization.id,
           },
         });
       });
@@ -92,6 +96,7 @@ export default function IntegrationHub() {
       // Invalidate queries so the dashboard refreshes
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["ticket-count-roi"] });
       queryClient.invalidateQueries({ queryKey: ["platform-stats"] });
 
       toast({
