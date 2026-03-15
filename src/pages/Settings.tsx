@@ -6,14 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Key, Globe, Shield, CheckCircle, Loader2 } from "lucide-react";
+import { Save, Key, Globe, Shield, CheckCircle, Loader2, Coins } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { CURRENCIES } from "@/hooks/use-currency";
 
 export default function Settings() {
   const { toast } = useToast();
-  const { organization, isLicensed, isTrialExpired, trialDaysLeft, refreshOrg, user } = useAuth();
+  const { organization, isLicensed, isTrialExpired, trialDaysLeft, refreshOrg, refreshProfile, user, userProfile } = useAuth();
   const [apiConfig, setApiConfig] = useState({
     platform: "servicenow",
     instanceUrl: "",
@@ -23,6 +24,7 @@ export default function Settings() {
   });
   const [licenseKey, setLicenseKey] = useState("");
   const [activating, setActivating] = useState(false);
+  const [savingCurrency, setSavingCurrency] = useState(false);
 
   const handleSave = () => {
     toast({ title: "Configuration saved", description: "Outbound API settings updated successfully." });
@@ -48,15 +50,73 @@ export default function Settings() {
     }
   };
 
+  const handleCurrencyChange = async (value: string) => {
+    if (!userProfile) return;
+    setSavingCurrency(true);
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ preferred_currency: value })
+        .eq("auth_id", user!.id);
+
+      if (error) throw error;
+      await refreshProfile();
+      toast({ title: "Currency updated", description: `Display currency set to ${value}.` });
+    } catch (err: any) {
+      toast({ title: "Failed to update currency", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingCurrency(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6 max-w-[900px]">
       <div>
         <h1 className="text-xl font-bold text-foreground">Settings</h1>
-        <p className="text-xs text-muted-foreground font-mono mt-0.5">Configure outbound sync, licensing & API connections</p>
+        <p className="text-xs text-muted-foreground font-mono mt-0.5">Configure outbound sync, licensing & preferences</p>
       </div>
 
-      {/* License Management */}
+      {/* Currency Preference */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Coins className="w-4 h-4 text-primary" />
+              <CardTitle className="text-sm">Display Currency</CardTitle>
+            </div>
+            <CardDescription className="text-xs">
+              Choose your preferred currency for all financial calculations, ROI reports, and cost displays.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">Currency</Label>
+                <Select
+                  value={userProfile?.preferred_currency ?? "USD"}
+                  onValueChange={handleCurrencyChange}
+                  disabled={savingCurrency}
+                >
+                  <SelectTrigger className="bg-muted/50 border-border h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.symbol} — {c.name} ({c.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {savingCurrency && <Loader2 className="w-4 h-4 animate-spin text-primary mt-5" />}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* License Management */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <Card className={isLicensed ? "border-primary/30" : isTrialExpired ? "border-destructive/30" : ""}>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -203,7 +263,7 @@ export default function Settings() {
       </motion.div>
 
       {/* Organization Info */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Organization</CardTitle>
