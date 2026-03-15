@@ -219,7 +219,7 @@ export default function Settings() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">HTTP Method</Label>
                 <Select value={apiConfig.httpMethod} onValueChange={(v) => setApiConfig(p => ({ ...p, httpMethod: v }))}>

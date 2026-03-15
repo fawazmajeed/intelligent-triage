@@ -121,7 +121,7 @@ export function ROICalculator() {
           <TrendingUp className="w-4 h-4 text-primary" />
           <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Projected Monthly Savings</span>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <p className="text-xl font-bold font-mono text-primary">{formatCurrency(Math.round(moneySaved))}</p>
             <p className="text-[10px] text-muted-foreground">Cost Savings</p>

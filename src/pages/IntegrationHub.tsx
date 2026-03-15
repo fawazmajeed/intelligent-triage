@@ -302,7 +302,7 @@ export default function IntegrationHub() {
       {/* Connected Platforms */}
       <div>
         <h2 className="text-sm font-semibold text-foreground mb-3">ITSM Platforms</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {platformDefs.map((platform, i) => {
             const ticketCount = platformStats?.[platform.source] ?? 0;
             const connection = activeConnections?.[platform.source];
