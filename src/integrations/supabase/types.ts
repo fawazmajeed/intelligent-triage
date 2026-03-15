@@ -49,6 +49,111 @@ export type Database = {
           },
         ]
       }
+      org_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_teams: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_teams_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_training_examples: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          organization_id: string
+          severity: string | null
+          source: string | null
+          team: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          organization_id: string
+          severity?: string | null
+          source?: string | null
+          team?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          organization_id?: string
+          severity?: string | null
+          source?: string | null
+          team?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_training_examples_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
