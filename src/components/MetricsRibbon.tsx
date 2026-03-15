@@ -3,14 +3,14 @@ import { Ticket, Brain, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrency } from "@/hooks/use-currency";
 
 export function MetricsRibbon() {
+  const { formatCurrency } = useCurrency();
+
   const { data, isLoading } = useQuery({
     queryKey: ["ticket-metrics"],
     queryFn: async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
       const { count } = await supabase
         .from("tickets")
         .select("*", { count: "exact", head: true });
@@ -24,7 +24,7 @@ export function MetricsRibbon() {
       const avgConfidence = scores && scores.length > 0
         ? scores.reduce((sum, t) => sum + (t.confidence_score ?? 0), 0) / scores.length
         : 0;
-      const hoursSaved = totalTickets * 0.065; // ~4 min saved per ticket
+      const hoursSaved = totalTickets * 0.065;
 
       return { totalTickets, avgConfidence, hoursSaved };
     },
@@ -56,7 +56,7 @@ export function MetricsRibbon() {
     {
       label: "Estimated Hours Saved",
       value: `${(data?.hoursSaved ?? 0).toFixed(1)}h`,
-      change: `≈ $${Math.round((data?.hoursSaved ?? 0) * 70)}`,
+      change: `≈ ${formatCurrency(Math.round((data?.hoursSaved ?? 0) * 70))}`,
       icon: Clock,
     },
   ];
