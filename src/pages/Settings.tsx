@@ -116,6 +116,11 @@ export default function Settings() {
         </Card>
       </motion.div>
 
+      {/* AI Triage Configuration */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+        <AIConfigSection />
+      </motion.div>
+
       {/* License Management */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <Card className={isLicensed ? "border-primary/30" : isTrialExpired ? "border-destructive/30" : ""}>
