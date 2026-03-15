@@ -5,9 +5,73 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  Zap,
+  Shield,
+  BarChart3,
+  ArrowRight,
+  CheckCircle2,
+  Activity,
+  Layers,
+  Brain,
+  Clock,
+  TrendingUp,
+} from "lucide-react";
+
+const PLATFORMS = [
+  "ServiceNow",
+  "Jira",
+  "Zendesk",
+  "Freshservice",
+  "ManageEngine",
+  "Zoho Desk",
+  "BMC Helix",
+  "SolarWinds",
+  "HaloITSM",
+];
+
+const FEATURES = [
+  {
+    icon: Brain,
+    title: "AI-Powered Triage",
+    desc: "Automatically categorize, prioritize, and route tickets using contextual AI — no manual rules.",
+  },
+  {
+    icon: Layers,
+    title: "Multi-Platform Unification",
+    desc: "Connect 9+ ITSM tools into a single pane of glass. One dashboard for all your ticket queues.",
+  },
+  {
+    icon: Zap,
+    title: "Zero-Config Intelligence",
+    desc: "Upload historical data or let AI learn from your custom categories. No model training needed.",
+  },
+  {
+    icon: TrendingUp,
+    title: "ROI from Day One",
+    desc: "See real-time cost savings with built-in ROI calculator. Justify automation with hard numbers.",
+  },
+];
+
+const STATS = [
+  { value: "94%", label: "Triage Accuracy" },
+  { value: "< 2s", label: "Avg Response Time" },
+  { value: "73%", label: "Cost Reduction" },
+  { value: "9+", label: "ITSM Integrations" },
+];
+
+const QUEUE_PREVIEW = [
+  { id: "INC-4821", desc: "VPN tunnel drops during peak hours", severity: "Critical", team: "Network Ops", confidence: 96 },
+  { id: "INC-4822", desc: "SSO authentication failing for Azure AD", severity: "High", team: "Identity & Access", confidence: 91 },
+  { id: "INC-4823", desc: "Printer queue stalled on 3rd floor", severity: "Low", team: "Desktop Support", confidence: 88 },
+  { id: "INC-4824", desc: "SAP module timeout during payroll run", severity: "Critical", team: "ERP Support", confidence: 94 },
+  { id: "INC-4825", desc: "New hire laptop provisioning request", severity: "Medium", team: "Asset Mgmt", confidence: 85 },
+];
 
 export default function Auth() {
   const { user, loading } = useAuth();
@@ -31,7 +95,6 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -59,79 +122,304 @@ export default function Auth() {
     }
   };
 
+  const severityColor = (s: string) => {
+    if (s === "Critical") return "severity-critical";
+    if (s === "High") return "severity-high";
+    if (s === "Medium") return "severity-medium";
+    return "severity-low";
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background grid-pattern">
-      <Card className="w-full max-w-md mx-4">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-lg font-bold text-foreground font-mono">TriageFlow AI</span>
+    <div className="min-h-screen bg-background grid-pattern overflow-auto">
+      {/* ─── Hero Section ─── */}
+      <div className="relative">
+        {/* Glow effect */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="relative max-w-6xl mx-auto px-6 pt-12 pb-8">
+          {/* Nav */}
+          <div className="flex items-center justify-between mb-16">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <span className="text-lg font-bold text-foreground font-mono">TriageFlow AI</span>
+            </div>
+            <Badge variant="outline" className="text-primary border-primary/30 font-mono text-[10px]">
+              <Activity className="w-3 h-3 mr-1" /> PLATFORM ACTIVE
+            </Badge>
           </div>
-          <CardTitle className="text-lg">{isLogin ? "Sign In" : "Create Account"}</CardTitle>
-          <CardDescription className="text-xs">
-            {isLogin
-              ? "Sign in to your TriageFlow dashboard"
-              : "Start your 7-day free trial"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div>
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">
-                  Organization Name
-                </Label>
-                <Input
-                  placeholder="Acme Corp IT"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  className="bg-muted/50 border-border h-9 text-sm"
-                />
+
+          {/* Hero content */}
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <Badge className="bg-primary/10 text-primary border-primary/20 font-mono text-[10px] uppercase tracking-wider">
+                  AI-Powered ITSM Automation
+                </Badge>
+                <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-[1.1] tracking-tight">
+                  One AI Brain for
+                  <span className="text-primary block">All Your ITSM Tools</span>
+                </h1>
+                <p className="text-muted-foreground text-base leading-relaxed max-w-lg">
+                  Stop switching between ServiceNow, Jira, and Zendesk. TriageFlow AI unifies your ticket queues,
+                  auto-categorizes incidents, and routes them to the right team — in under 2 seconds.
+                </p>
               </div>
-            )}
-            <div>
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">
-                Email
-              </Label>
-              <Input
-                type="email"
-                required
-                placeholder="you@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-muted/50 border-border h-9 text-sm"
-              />
+
+              {/* Stats ribbon */}
+              <div className="grid grid-cols-4 gap-3">
+                {STATS.map((s) => (
+                  <div key={s.label} className="text-center p-3 rounded-lg bg-card/60 border border-border/50 backdrop-blur-sm">
+                    <div className="text-xl font-bold text-primary font-mono">{s.value}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Platform logos */}
+              <div className="space-y-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+                  Connects with your existing stack
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {PLATFORMS.map((p) => (
+                    <span
+                      key={p}
+                      className="px-2.5 py-1 text-[11px] font-mono rounded-md bg-muted/60 text-muted-foreground border border-border/50 hover:border-primary/40 hover:text-primary transition-colors"
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div>
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">
-                Password
-              </Label>
-              <Input
-                type="password"
-                required
-                minLength={6}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-muted/50 border-border h-9 text-sm"
-              />
+
+            {/* Auth card */}
+            <div className="lg:pl-8">
+              <Card className="border-border/60 bg-card/80 backdrop-blur-md shadow-xl glow-primary">
+                <CardContent className="p-6">
+                  <div className="text-center mb-5">
+                    <h2 className="text-lg font-bold text-foreground">
+                      {isLogin ? "Welcome Back" : "Start Free Trial"}
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isLogin ? "Sign in to your dashboard" : "7 days free · No credit card required"}
+                    </p>
+                  </div>
+                  <form onSubmit={handleSubmit} className="space-y-3.5">
+                    {!isLogin && (
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block font-mono">
+                          Organization Name
+                        </Label>
+                        <Input
+                          placeholder="Acme Corp IT"
+                          value={orgName}
+                          onChange={(e) => setOrgName(e.target.value)}
+                          className="bg-muted/50 border-border h-9 text-sm"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block font-mono">
+                        Email
+                      </Label>
+                      <Input
+                        type="email"
+                        required
+                        placeholder="you@company.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="bg-muted/50 border-border h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block font-mono">
+                        Password
+                      </Label>
+                      <Input
+                        type="password"
+                        required
+                        minLength={6}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="bg-muted/50 border-border h-9 text-sm"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={submitting}
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 font-semibold"
+                    >
+                      {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      {isLogin ? "Sign In" : "Start Free Trial"}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </form>
+                  <div className="mt-4 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setIsLogin(!isLogin)}
+                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                    </button>
+                  </div>
+                  {!isLogin && (
+                    <div className="mt-4 space-y-1.5">
+                      {["7-day free trial", "Connect unlimited ITSM tools", "AI categorization from day one"].map((t) => (
+                        <div key={t} className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                          {t}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
-            <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-              {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isLogin ? "Sign In" : "Start Free Trial"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* ─── Live Queue Preview ─── */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="text-center mb-8">
+          <Badge className="bg-primary/10 text-primary border-primary/20 font-mono text-[10px] uppercase tracking-wider mb-3">
+            <Activity className="w-3 h-3 mr-1" /> Live Preview
+          </Badge>
+          <h2 className="text-2xl font-bold text-foreground">See AI Triage in Action</h2>
+          <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+            Every ticket is instantly categorized, severity-assessed, and routed — no human rules engine needed.
+          </p>
+        </div>
+
+        <Card className="border-border/60 bg-card/60 backdrop-blur-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/50">
+                  <th className="text-left p-3 text-[10px] uppercase tracking-wider text-muted-foreground font-mono font-medium">Ticket</th>
+                  <th className="text-left p-3 text-[10px] uppercase tracking-wider text-muted-foreground font-mono font-medium">Description</th>
+                  <th className="text-left p-3 text-[10px] uppercase tracking-wider text-muted-foreground font-mono font-medium">Severity</th>
+                  <th className="text-left p-3 text-[10px] uppercase tracking-wider text-muted-foreground font-mono font-medium">Routed To</th>
+                  <th className="text-right p-3 text-[10px] uppercase tracking-wider text-muted-foreground font-mono font-medium">AI Confidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {QUEUE_PREVIEW.map((t, i) => (
+                  <tr key={t.id} className={`border-b border-border/30 ${i % 2 === 0 ? "bg-muted/20" : ""}`}>
+                    <td className="p-3 font-mono text-xs text-primary">{t.id}</td>
+                    <td className="p-3 text-foreground text-xs">{t.desc}</td>
+                    <td className="p-3">
+                      <span className={`${severityColor(t.severity)} text-[11px] font-mono px-2 py-0.5 rounded border`}>
+                        {t.severity}
+                      </span>
+                    </td>
+                    <td className="p-3 text-xs text-muted-foreground font-mono">{t.team}</td>
+                    <td className="p-3 text-right">
+                      <span className="text-xs font-mono text-primary font-semibold">{t.confidence}%</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-2.5 border-t border-border/30 flex items-center justify-between bg-muted/30">
+            <span className="text-[10px] text-muted-foreground font-mono">
+              <Clock className="w-3 h-3 inline mr-1" /> Avg triage time: 1.8s
+            </span>
+            <span className="text-[10px] text-muted-foreground font-mono">
+              Showing sample queue · <span className="text-primary">Sign up to see your live data</span>
+            </span>
+          </div>
+        </Card>
+      </div>
+
+      {/* ─── Features Grid ─── */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-foreground">Why Teams Switch to TriageFlow</h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            Replace fragmented rule engines with a single intelligent automation layer.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          {FEATURES.map((f) => (
+            <Card key={f.title} className="border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/30 transition-colors group">
+              <CardContent className="p-5 flex gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <f.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">{f.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{f.desc}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── How It Works ─── */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-foreground">Up and Running in 3 Steps</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            {
+              step: "01",
+              icon: Layers,
+              title: "Connect Your ITSM Tools",
+              desc: "Toggle on your platforms — ServiceNow, Jira, Zendesk, and more. Webhooks are pre-configured.",
+            },
+            {
+              step: "02",
+              icon: BarChart3,
+              title: "Upload Historical Data",
+              desc: "Drop a CSV of past tickets. The AI learns your team's categories, routing patterns, and severity levels.",
+            },
+            {
+              step: "03",
+              icon: Shield,
+              title: "Watch AI Triage Live",
+              desc: "New tickets are auto-classified and routed in real-time. Operators correct edge cases — AI gets smarter.",
+            },
+          ].map((s) => (
+            <div key={s.step} className="relative p-5 rounded-lg border border-border/50 bg-card/40 backdrop-blur-sm">
+              <div className="text-[40px] font-bold text-primary/10 font-mono absolute top-3 right-4">{s.step}</div>
+              <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
+                <s.icon className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">{s.title}</h3>
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Footer CTA ─── */}
+      <div className="max-w-6xl mx-auto px-6 py-12 text-center">
+        <div className="p-8 rounded-xl border border-primary/20 bg-primary/5 backdrop-blur-sm">
+          <h2 className="text-xl font-bold text-foreground mb-2">Ready to automate your incident triage?</h2>
+          <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
+            Join IT teams who reduced manual triage by 73% and cut mean-time-to-resolution in half.
+          </p>
+          <Button
+            onClick={() => {
+              setIsLogin(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 font-semibold"
+          >
+            Start Free Trial <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-6 font-mono">
+          © 2026 TriageFlow AI · Enterprise-grade ITSM automation
+        </p>
+      </div>
     </div>
   );
 }
