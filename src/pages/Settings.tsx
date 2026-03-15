@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { CURRENCIES } from "@/hooks/use-currency";
+import AIConfigSection from "@/components/AIConfigSection";
 
 export default function Settings() {
   const { toast } = useToast();
