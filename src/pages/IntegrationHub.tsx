@@ -67,6 +67,27 @@ export default function IntegrationHub() {
     refetchInterval: 5000,
   });
 
+  // Active connections from integration_connections table
+  const { data: activeConnections } = useQuery({
+    queryKey: ["integration-connections", organization?.id],
+    queryFn: async () => {
+      if (!organization) return {};
+      const { data, error } = await supabase
+        .from("integration_connections")
+        .select("platform_source, is_active, connected_at")
+        .eq("organization_id", organization.id);
+      if (error) throw error;
+
+      const map: Record<string, { is_active: boolean; connected_at: string }> = {};
+      data.forEach((c) => {
+        map[c.platform_source] = { is_active: c.is_active, connected_at: c.connected_at };
+      });
+      return map;
+    },
+    enabled: !!organization,
+    refetchInterval: 5000,
+  });
+
   const handleCopy = () => {
     navigator.clipboard.writeText(webhookUrl);
     setCopied(true);
@@ -81,7 +102,7 @@ export default function IntegrationHub() {
     }
     setSimulating(true);
     const sources = ["Jira", "ServiceNow", "Zendesk", "Freshservice", "ManageEngine", "ZohoDesk", "BMCHelix", "SolarWinds", "HaloITSM"];
-    const count = 3 + Math.floor(Math.random() * 3); // 3-5 tickets
+    const count = 3 + Math.floor(Math.random() * 3);
 
     try {
       const promises = Array.from({ length: count }).map(() => {
@@ -100,7 +121,6 @@ export default function IntegrationHub() {
       const results = await Promise.allSettled(promises);
       const succeeded = results.filter((r) => r.status === "fulfilled" && !(r.value as any).error).length;
 
-      // Invalidate queries so the dashboard refreshes
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket-metrics"] });
       queryClient.invalidateQueries({ queryKey: ["ticket-count-roi"] });
@@ -166,13 +186,14 @@ export default function IntegrationHub() {
         </Card>
       </motion.div>
 
-      {/* Connected Platforms — live from DB */}
+      {/* Connected Platforms */}
       <div>
-        <h2 className="text-sm font-semibold text-foreground mb-3">Connected Platforms</h2>
+        <h2 className="text-sm font-semibold text-foreground mb-3">ITSM Platforms</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {platformDefs.map((platform, i) => {
             const ticketCount = platformStats?.[platform.source] ?? 0;
-            const status = ticketCount > 0 ? "connected" : "disconnected";
+            const connection = activeConnections?.[platform.source];
+            const isActive = connection?.is_active ?? false;
 
             return (
               <motion.div
@@ -205,14 +226,14 @@ export default function IntegrationHub() {
                         </div>
                       </div>
                       <Badge
-                        variant={status === "connected" ? "default" : "outline"}
+                        variant={isActive ? "default" : "outline"}
                         className={`text-[10px] ${
-                          status === "connected"
+                          isActive
                             ? "bg-success/15 text-success border-success/30"
                             : ""
                         }`}
                       >
-                        {status}
+                        {isActive ? "syncing" : "inactive"}
                       </Badge>
                     </div>
                   </CardContent>
@@ -230,7 +251,13 @@ export default function IntegrationHub() {
           onOpenChange={(open) => !open && setSelectedPlatform(null)}
           platform={selectedPlatform}
           ticketCount={platformStats?.[selectedPlatform.source] ?? 0}
+          isActive={activeConnections?.[selectedPlatform.source]?.is_active ?? false}
+          connectedAt={activeConnections?.[selectedPlatform.source]?.connected_at}
           webhookUrl={webhookUrl}
+          organizationId={organization?.id}
+          onConnectionChange={() => {
+            queryClient.invalidateQueries({ queryKey: ["integration-connections"] });
+          }}
         />
       )}
     </div>
