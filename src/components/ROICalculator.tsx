@@ -1,12 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calculator, TrendingUp } from "lucide-react";
+import { Calculator, TrendingUp, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ROICalculator() {
-  const [volume, setVolume] = useState(500);
+  const { data: ticketCount, isLoading } = useQuery({
+    queryKey: ["ticket-count-roi"],
+    queryFn: async () => {
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { count, error } = await supabase
+        .from("tickets")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", thirtyDaysAgo);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const [volume, setVolume] = useState(0);
   const [rate, setRate] = useState(70);
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (ticketCount !== undefined && !initialized) {
+      setVolume(ticketCount);
+      setInitialized(true);
+    }
+  }, [ticketCount, initialized]);
 
   // Assumptions: AI saves ~8 min per ticket on average
   const minutesSaved = volume * 8;
@@ -24,12 +48,14 @@ export function ROICalculator() {
       <div className="flex items-center gap-2 mb-4">
         <Calculator className="w-4 h-4 text-primary" />
         <h3 className="text-sm font-semibold text-foreground">ROI Calculator</h3>
-        <span className="text-[10px] text-muted-foreground font-mono ml-auto">What-If Analysis</span>
+        <span className="text-[10px] text-muted-foreground font-mono ml-auto">What-If Analysis · Based on live data</span>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-5">
         <div>
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">Monthly Ticket Volume</Label>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">
+            Monthly Ticket Volume {isLoading && <Loader2 className="w-3 h-3 inline animate-spin ml-1" />}
+          </Label>
           <Input
             type="number"
             value={volume}
