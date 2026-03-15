@@ -10,10 +10,19 @@ interface Organization {
   license_key: string | null;
 }
 
+interface UserProfile {
+  id: string;
+  auth_id: string;
+  email: string;
+  organization_id: string;
+  preferred_currency: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   organization: Organization | null;
+  userProfile: UserProfile | null;
   loading: boolean;
   isTrialExpired: boolean;
   trialDaysLeft: number;
@@ -21,6 +30,7 @@ interface AuthContextType {
   isReadOnly: boolean;
   signOut: () => Promise<void>;
   refreshOrg: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,16 +39,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchOrg = async (authId: string) => {
+  const fetchUserData = async (authId: string) => {
     const { data: userData } = await supabase
       .from("users")
-      .select("organization_id")
+      .select("*")
       .eq("auth_id", authId)
       .single();
 
     if (userData) {
+      setUserProfile(userData as UserProfile);
+
       const { data: orgData } = await supabase
         .from("organizations")
         .select("*")
@@ -52,7 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshOrg = async () => {
-    if (user) await fetchOrg(user.id);
+    if (user) await fetchUserData(user.id);
+  };
+
+  const refreshProfile = async () => {
+    if (user) await fetchUserData(user.id);
   };
 
   useEffect(() => {
@@ -62,9 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          setTimeout(() => fetchOrg(session.user.id), 0);
+          setTimeout(() => fetchUserData(session.user.id), 0);
         } else {
           setOrganization(null);
+          setUserProfile(null);
         }
         setLoading(false);
       }
@@ -74,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchOrg(session.user.id);
+        fetchUserData(session.user.id);
       }
       setLoading(false);
     });
@@ -94,14 +112,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setOrganization(null);
+    setUserProfile(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user, session, organization, loading,
+        user, session, organization, userProfile, loading,
         isTrialExpired, trialDaysLeft, isLicensed, isReadOnly,
-        signOut, refreshOrg,
+        signOut, refreshOrg, refreshProfile,
       }}
     >
       {children}

@@ -116,6 +116,7 @@ export type Database = {
           email: string
           id: string
           organization_id: string
+          preferred_currency: string
         }
         Insert: {
           auth_id: string
@@ -123,6 +124,7 @@ export type Database = {
           email: string
           id?: string
           organization_id: string
+          preferred_currency?: string
         }
         Update: {
           auth_id?: string
@@ -130,6 +132,7 @@ export type Database = {
           email?: string
           id?: string
           organization_id?: string
+          preferred_currency?: string
         }
         Relationships: [
           {

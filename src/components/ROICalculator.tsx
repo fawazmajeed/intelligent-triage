@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrency } from "@/hooks/use-currency";
 
 export function ROICalculator() {
+  const { formatCurrency, currency } = useCurrency();
+
   const { data: ticketCount, isLoading } = useQuery({
     queryKey: ["ticket-count-roi"],
     queryFn: async () => {
@@ -32,7 +35,6 @@ export function ROICalculator() {
     }
   }, [ticketCount, initialized]);
 
-  // Assumptions: AI saves ~8 min per ticket on average
   const minutesSaved = volume * 8;
   const hoursSaved = minutesSaved / 60;
   const moneySaved = hoursSaved * rate;
@@ -64,7 +66,9 @@ export function ROICalculator() {
           />
         </div>
         <div>
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">Avg. Tech Hourly Rate ($)</Label>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">
+            Avg. Tech Hourly Rate ({currency.symbol})
+          </Label>
           <Input
             type="number"
             value={rate}
@@ -81,7 +85,7 @@ export function ROICalculator() {
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <p className="text-xl font-bold font-mono text-primary">${moneySaved.toLocaleString()}</p>
+            <p className="text-xl font-bold font-mono text-primary">{formatCurrency(Math.round(moneySaved))}</p>
             <p className="text-[10px] text-muted-foreground">Cost Savings</p>
           </div>
           <div>
