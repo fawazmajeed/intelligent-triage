@@ -119,8 +119,23 @@ export default function AIConfigSection() {
       }
 
       const rows = lines.slice(1).map((line) => {
-        // Simple CSV parse (handles basic quoting)
-        const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map((v) => v.replace(/^"|"$/g, "").trim()) ?? line.split(",").map((v) => v.trim());
+        // Proper CSV parse: handles quoted fields with commas and spaces
+        const values: string[] = [];
+        let current = "";
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            inQuotes = !inQuotes;
+          } else if (ch === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = "";
+          } else {
+            current += ch;
+          }
+        }
+        values.push(current.trim());
+
         return {
           organization_id: orgId,
           description: values[descIdx] || "",
