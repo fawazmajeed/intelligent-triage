@@ -46,6 +46,10 @@ export default function IntegrationHub() {
   const [copied, setCopied] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<typeof platformDefs[number] | null>(null);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualDesc, setManualDesc] = useState("");
+  const [manualSource, setManualSource] = useState("ServiceNow");
+  const [submittingManual, setSubmittingManual] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { organization } = useAuth();
