@@ -107,8 +107,16 @@ export default function AIConfigSection() {
       if (lines.length < 2) throw new Error("CSV must have a header row and at least one data row.");
 
       const header = lines[0].toLowerCase();
-      // Find column indices - flexible header matching
-      const cols = header.split(",").map((h) => h.trim().replace(/"/g, ""));
+      const cols: string[] = [];
+      let cur = "";
+      let inQ = false;
+      for (let i = 0; i < header.length; i++) {
+        const ch = header[i];
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === ',' && !inQ) { cols.push(cur.trim().replace(/"/g, "")); cur = ""; }
+        else { cur += ch; }
+      }
+      cols.push(cur.trim().replace(/"/g, ""));
       const descIdx = cols.findIndex((c) => c.includes("description") || c.includes("summary") || c.includes("subject") || c.includes("short_description"));
       const catIdx = cols.findIndex((c) => c.includes("category") || c.includes("type"));
       const teamIdx = cols.findIndex((c) => c.includes("team") || c.includes("group") || c.includes("assignment") || c.includes("assigned"));
@@ -119,8 +127,23 @@ export default function AIConfigSection() {
       }
 
       const rows = lines.slice(1).map((line) => {
-        // Simple CSV parse (handles basic quoting)
-        const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map((v) => v.replace(/^"|"$/g, "").trim()) ?? line.split(",").map((v) => v.trim());
+        // Proper CSV parse: handles quoted fields with commas and spaces
+        const values: string[] = [];
+        let current = "";
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            inQuotes = !inQuotes;
+          } else if (ch === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = "";
+          } else {
+            current += ch;
+          }
+        }
+        values.push(current.trim());
+
         return {
           organization_id: orgId,
           description: values[descIdx] || "",
@@ -269,6 +292,7 @@ export default function AIConfigSection() {
           <p className="text-[10px] text-muted-foreground">
             Upload a CSV export from your ITSM tool. Required columns: <code className="bg-muted px-1 rounded">description</code>, <code className="bg-muted px-1 rounded">category</code>. 
             Optional: <code className="bg-muted px-1 rounded">team</code>, <code className="bg-muted px-1 rounded">severity</code>. 
+            Multi-word values (e.g. "Network Operations", "Tier 1 - Service Desk") are fully supported — wrap them in quotes in your CSV if they contain commas.
             The AI uses these as reference examples to match your organization's classification patterns.
           </p>
           <div className="flex gap-2">
