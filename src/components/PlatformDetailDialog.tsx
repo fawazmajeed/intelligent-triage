@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, XCircle, ArrowRight, Unplug, RefreshCw, ShieldCheck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { CheckCircle2, XCircle, ArrowRight, Unplug, RefreshCw, ShieldCheck, Power, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlatformDetailDialogProps {
   open: boolean;
@@ -13,7 +18,11 @@ interface PlatformDetailDialogProps {
     tier?: string;
   };
   ticketCount: number;
+  isActive: boolean;
+  connectedAt?: string;
   webhookUrl: string;
+  organizationId?: string;
+  onConnectionChange: () => void;
 }
 
 const connectionGuides: Record<string, { steps: string[]; disconnectSteps: string[] }> = {
@@ -163,10 +172,55 @@ export default function PlatformDetailDialog({
   onOpenChange,
   platform,
   ticketCount,
+  isActive,
+  connectedAt,
   webhookUrl,
+  organizationId,
+  onConnectionChange,
 }: PlatformDetailDialogProps) {
-  const isConnected = ticketCount > 0;
+  const [toggling, setToggling] = useState(false);
+  const { toast } = useToast();
   const guide = connectionGuides[platform.source];
+
+  const handleToggleConnection = async (enable: boolean) => {
+    if (!organizationId) return;
+    setToggling(true);
+    try {
+      if (enable) {
+        // Upsert: create or update to active
+        const { error } = await supabase
+          .from("integration_connections")
+          .upsert(
+            {
+              organization_id: organizationId,
+              platform_source: platform.source,
+              is_active: true,
+              connected_at: new Date().toISOString(),
+              disconnected_at: null,
+            },
+            { onConflict: "organization_id,platform_source" }
+          );
+        if (error) throw error;
+        toast({ title: `${platform.name} connected`, description: "Auto-sync is now active. Incoming tickets will be processed." });
+      } else {
+        const { error } = await supabase
+          .from("integration_connections")
+          .update({
+            is_active: false,
+            disconnected_at: new Date().toISOString(),
+          })
+          .eq("organization_id", organizationId)
+          .eq("platform_source", platform.source);
+        if (error) throw error;
+        toast({ title: `${platform.name} disconnected`, description: "Auto-sync disabled. No new tickets will be processed from this platform." });
+      }
+      onConnectionChange();
+    } catch (e) {
+      toast({ title: "Error", description: String(e), variant: "destructive" });
+    } finally {
+      setToggling(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,30 +242,48 @@ export default function PlatformDetailDialog({
           </div>
         </DialogHeader>
 
-        {/* Connection Status */}
-        <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+        {/* Connection Status & Toggle */}
+        <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</span>
-            <Badge
-              variant={isConnected ? "default" : "outline"}
-              className={`text-[10px] ${
-                isConnected
-                  ? "bg-success/15 text-success border-success/30"
-                  : "bg-destructive/10 text-destructive border-destructive/30"
-              }`}
-            >
-              {isConnected ? (
-                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Connected</span>
-              ) : (
-                <span className="flex items-center gap-1"><XCircle className="w-3 h-3" /> Not Connected</span>
-              )}
-            </Badge>
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Auto-Sync Status</span>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={isActive ? "default" : "outline"}
+                  className={`text-[10px] ${
+                    isActive
+                      ? "bg-success/15 text-success border-success/30"
+                      : "bg-destructive/10 text-destructive border-destructive/30"
+                  }`}
+                >
+                  {isActive ? (
+                    <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Active</span>
+                  ) : (
+                    <span className="flex items-center gap-1"><XCircle className="w-3 h-3" /> Inactive</span>
+                  )}
+                </Badge>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {toggling && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+              <Switch
+                checked={isActive}
+                onCheckedChange={handleToggleConnection}
+                disabled={toggling}
+              />
+            </div>
           </div>
-          {isConnected && (
-            <div className="text-xs text-foreground/80 space-y-1">
-              <p><span className="text-muted-foreground">Tickets ingested:</span> <span className="font-semibold">{ticketCount}</span></p>
-              <p><span className="text-muted-foreground">Source system tag:</span> <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{platform.source}</code></p>
-              <p><span className="text-muted-foreground">Sync back:</span> Categorized data is returned via the webhook response payload</p>
+
+          {isActive && connectedAt && (
+            <p className="text-[10px] text-muted-foreground">
+              Connected since {new Date(connectedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+            </p>
+          )}
+
+          {ticketCount > 0 && (
+            <div className="text-xs text-foreground/80 space-y-1 pt-1 border-t border-border/50">
+              <p><span className="text-muted-foreground">Total tickets ingested:</span> <span className="font-semibold">{ticketCount}</span></p>
+              <p><span className="text-muted-foreground">Source tag:</span> <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{platform.source}</code></p>
             </div>
           )}
         </div>
@@ -219,28 +291,34 @@ export default function PlatformDetailDialog({
         <Separator />
 
         {/* How to Connect */}
-        {!isConnected && guide && (
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <ArrowRight className="w-4 h-4 text-primary" /> How to Connect
-            </h3>
-            <div className="text-xs text-muted-foreground mb-2">
-              Your TriageFlow webhook endpoint:
+        {!isActive && guide && (
+          <>
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <ArrowRight className="w-4 h-4 text-primary" /> How to Connect
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Follow these steps in your <strong>{platform.name}</strong> admin, then toggle the switch above to enable auto-sync.
+              </p>
+              <div className="text-xs text-muted-foreground mb-2">
+                Your TriageFlow webhook endpoint:
+              </div>
+              <code className="block bg-muted/50 border border-border rounded-md px-3 py-2 text-[10px] font-mono text-foreground/80 break-all">
+                {webhookUrl}
+              </code>
+              <ol className="space-y-2 mt-3">
+                {guide.steps.map((step, i) => (
+                  <li key={i} className="flex gap-2 text-xs text-foreground/80">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold mt-0.5">
+                      {i + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
             </div>
-            <code className="block bg-muted/50 border border-border rounded-md px-3 py-2 text-[10px] font-mono text-foreground/80 break-all">
-              {webhookUrl}
-            </code>
-            <ol className="space-y-2 mt-3">
-              {guide.steps.map((step, i) => (
-                <li key={i} className="flex gap-2 text-xs text-foreground/80">
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
+            <Separator />
+          </>
         )}
 
         {/* How Data Flows Back */}
@@ -273,21 +351,25 @@ export default function PlatformDetailDialog({
             <Unplug className="w-4 h-4 text-destructive" /> How to Disconnect
           </h3>
           <div className="text-xs text-foreground/80 space-y-2">
-            <p>To stop sending ticket data to TriageFlow AI:</p>
+            <p>To fully stop sending ticket data:</p>
             <ol className="space-y-1.5 ml-1">
+              <li className="flex gap-2">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-bold mt-0.5">1</span>
+                <span>Toggle the <strong>Auto-Sync</strong> switch above to <strong>off</strong> to disable processing in TriageFlow.</span>
+              </li>
               {guide?.disconnectSteps.map((step, i) => (
                 <li key={i} className="flex gap-2">
                   <span className="shrink-0 w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-bold mt-0.5">
-                    {i + 1}
+                    {i + 2}
                   </span>
                   <span>{step}</span>
                 </li>
               ))}
               <li className="flex gap-2">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-bold mt-0.5">
-                  {(guide?.disconnectSteps.length ?? 0) + 1}
+                  {(guide?.disconnectSteps.length ?? 0) + 2}
                 </span>
-                <span>No further tickets will be sent. Existing data in TriageFlow remains available for audit.</span>
+                <span>Existing data in TriageFlow remains available for audit and reporting.</span>
               </li>
             </ol>
           </div>

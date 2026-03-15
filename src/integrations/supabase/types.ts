@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      integration_connections: {
+        Row: {
+          connected_at: string
+          disconnected_at: string | null
+          id: string
+          is_active: boolean
+          organization_id: string
+          platform_source: string
+        }
+        Insert: {
+          connected_at?: string
+          disconnected_at?: string | null
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          platform_source: string
+        }
+        Update: {
+          connected_at?: string
+          disconnected_at?: string | null
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          platform_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
