@@ -292,6 +292,7 @@ export default function AIConfigSection() {
           <p className="text-[10px] text-muted-foreground">
             Upload a CSV export from your ITSM tool. Required columns: <code className="bg-muted px-1 rounded">description</code>, <code className="bg-muted px-1 rounded">category</code>. 
             Optional: <code className="bg-muted px-1 rounded">team</code>, <code className="bg-muted px-1 rounded">severity</code>. 
+            Multi-word values (e.g. "Network Operations", "Tier 1 - Service Desk") are fully supported — wrap them in quotes in your CSV if they contain commas.
             The AI uses these as reference examples to match your organization's classification patterns.
           </p>
           <div className="flex gap-2">
