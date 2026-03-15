@@ -2,17 +2,58 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { type Ticket, sourceIcons } from "@/lib/mock-data";
-import { Brain, AlertTriangle, Users, Zap } from "lucide-react";
+import { Brain, AlertTriangle, Users, Zap, FileInput, FileOutput, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
 
 interface AIInsightsPanelProps {
   ticket: Ticket | null;
   onClose: () => void;
 }
 
+function buildWebhookPayload(ticket: Ticket) {
+  return {
+    webhook_event: "ticket.created",
+    source: ticket.source_system,
+    timestamp: ticket.created_at,
+    payload: {
+      ticket_id: ticket.id,
+      description: ticket.raw_description,
+      source_system: ticket.source_system,
+    },
+  };
+}
+
+function buildResponsePayload(ticket: Ticket) {
+  return {
+    method: "PATCH",
+    endpoint: `https://${ticket.source_system.toLowerCase().replace(/\s+/g, "")}.example.com/api/tickets/${ticket.id.slice(0, 8)}`,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer ••••••••",
+    },
+    body: {
+      predicted_category: ticket.predicted_category,
+      predicted_severity: ticket.predicted_severity,
+      predicted_team: ticket.predicted_team,
+      confidence_score: ticket.confidence_score,
+      business_impact: ticket.business_impact,
+      triaged_by: "TriageFlow AI",
+      triaged_at: new Date().toISOString(),
+    },
+    status: ticket.synced_back_to_source ? 200 : null,
+    synced: ticket.synced_back_to_source,
+  };
+}
+
 export function AIInsightsPanel({ ticket, onClose }: AIInsightsPanelProps) {
+  const [showRawInput, setShowRawInput] = useState(false);
+  const [showRawOutput, setShowRawOutput] = useState(false);
+
   if (!ticket) return null;
 
   const confidencePct = Math.round((ticket.confidence_score ?? 0) * 100);
+  const webhookPayload = buildWebhookPayload(ticket);
+  const responsePayload = buildResponsePayload(ticket);
 
   return (
     <Sheet open={!!ticket} onOpenChange={(open) => !open && onClose()}>
@@ -91,6 +132,56 @@ export function AIInsightsPanel({ ticket, onClose }: AIInsightsPanelProps) {
             <div className="bg-muted/50 border border-border rounded-md p-3">
               <p className="text-xs text-foreground/80">{ticket.business_impact ?? "No impact assessment available"}</p>
             </div>
+          </section>
+
+          {/* Raw Webhook Input */}
+          <section>
+            <button
+              onClick={() => setShowRawInput(!showRawInput)}
+              className="w-full flex items-center justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors"
+            >
+              <span className="flex items-center gap-1.5">
+                <FileInput className="w-3 h-3 text-primary" />
+                Raw Webhook Input (Inbound)
+              </span>
+              {showRawInput ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+            {showRawInput && (
+              <div className="bg-muted/50 border border-border rounded-md p-3 overflow-x-auto">
+                <pre className="text-[11px] font-mono text-foreground/70 whitespace-pre-wrap break-all leading-relaxed">
+                  {JSON.stringify(webhookPayload, null, 2)}
+                </pre>
+              </div>
+            )}
+          </section>
+
+          {/* Raw Response Output */}
+          <section>
+            <button
+              onClick={() => setShowRawOutput(!showRawOutput)}
+              className="w-full flex items-center justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors"
+            >
+              <span className="flex items-center gap-1.5">
+                <FileOutput className="w-3 h-3 text-primary" />
+                Raw API Response (Outbound to {ticket.source_system})
+              </span>
+              {showRawOutput ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+            {showRawOutput && (
+              <div className="bg-muted/50 border border-border rounded-md p-3 overflow-x-auto">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge
+                    variant={ticket.synced_back_to_source ? "default" : "outline"}
+                    className={`text-[9px] font-mono ${ticket.synced_back_to_source ? "bg-success/15 text-success border-success/30" : "text-warning border-warning/30"}`}
+                  >
+                    {ticket.synced_back_to_source ? "200 OK — Synced" : "Pending — Not yet sent"}
+                  </Badge>
+                </div>
+                <pre className="text-[11px] font-mono text-foreground/70 whitespace-pre-wrap break-all leading-relaxed">
+                  {JSON.stringify(responsePayload, null, 2)}
+                </pre>
+              </div>
+            )}
           </section>
         </div>
       </SheetContent>
