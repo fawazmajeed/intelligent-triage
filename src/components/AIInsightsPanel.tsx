@@ -2,8 +2,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { type Ticket, sourceIcons } from "@/lib/mock-data";
-import { Brain, AlertTriangle, Users, Zap, FileInput, FileOutput, ChevronDown, ChevronUp } from "lucide-react";
+import { Brain, AlertTriangle, Users, Zap, FileInput, FileOutput, ChevronDown, ChevronUp, MessageSquareWarning } from "lucide-react";
 import { useState } from "react";
+import { TicketCorrectionForm } from "./TicketCorrectionForm";
 
 interface AIInsightsPanelProps {
   ticket: Ticket | null;
@@ -48,15 +49,32 @@ function buildResponsePayload(ticket: Ticket) {
 export function AIInsightsPanel({ ticket, onClose }: AIInsightsPanelProps) {
   const [showRawInput, setShowRawInput] = useState(false);
   const [showRawOutput, setShowRawOutput] = useState(false);
+  const [localTicket, setLocalTicket] = useState<Ticket | null>(null);
+
+  // Use localTicket for display if corrections were made, otherwise use prop
+  const displayTicket = localTicket?.id === ticket?.id ? localTicket : ticket;
 
   if (!ticket) return null;
 
-  const confidencePct = Math.round((ticket.confidence_score ?? 0) * 100);
-  const webhookPayload = buildWebhookPayload(ticket);
-  const responsePayload = buildResponsePayload(ticket);
+  const confidencePct = Math.round((displayTicket!.confidence_score ?? 0) * 100);
+  const webhookPayload = buildWebhookPayload(displayTicket!);
+  const responsePayload = buildResponsePayload(displayTicket!);
+  const needsReview = confidencePct < 75;
+
+  const handleCorrected = (field: string, newValue: string) => {
+    setLocalTicket((prev) => ({
+      ...(prev ?? ticket),
+      [field]: newValue,
+    } as Ticket));
+  };
 
   return (
-    <Sheet open={!!ticket} onOpenChange={(open) => !open && onClose()}>
+    <Sheet open={!!ticket} onOpenChange={(open) => {
+      if (!open) {
+        setLocalTicket(null);
+        onClose();
+      }
+    }}>
       <SheetContent side="right" className="w-full sm:max-w-lg bg-card border-border overflow-y-auto">
         <SheetHeader>
           <div className="flex items-center gap-2 mb-1">
@@ -69,6 +87,16 @@ export function AIInsightsPanel({ ticket, onClose }: AIInsightsPanelProps) {
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
+          {/* Review flag */}
+          {needsReview && (
+            <div className="flex items-center gap-2 bg-warning/10 border border-warning/30 rounded-md px-3 py-2">
+              <MessageSquareWarning className="w-4 h-4 text-warning shrink-0" />
+              <p className="text-[10px] text-warning">
+                Low confidence ({confidencePct}%) — Please review and correct the AI predictions below if needed.
+              </p>
+            </div>
+          )}
+
           <section>
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Raw User Complaint</h3>
             <div className="bg-muted/50 border border-border rounded-md p-3">
@@ -85,28 +113,60 @@ export function AIInsightsPanel({ ticket, onClose }: AIInsightsPanelProps) {
           </div>
 
           <section>
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Structured AI Output</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Structured AI Output</h3>
+              <Badge variant="outline" className="text-[9px] font-mono text-muted-foreground">
+                Click ✏️ to correct
+              </Badge>
+            </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Category</span>
-                <Badge variant="secondary" className="font-mono text-xs">{ticket.predicted_category ?? "—"}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="font-mono text-xs">{displayTicket!.predicted_category ?? "—"}</Badge>
+                  <TicketCorrectionForm
+                    ticket={ticket}
+                    field="predicted_category"
+                    currentValue={displayTicket!.predicted_category}
+                    label="Category"
+                    onCorrected={handleCorrected}
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Severity</span>
-                <Badge variant={ticket.predicted_severity === "Critical" ? "destructive" : "secondary"} className="font-mono text-xs">
-                  {ticket.predicted_severity ?? "—"}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={displayTicket!.predicted_severity === "Critical" ? "destructive" : "secondary"} className="font-mono text-xs">
+                    {displayTicket!.predicted_severity ?? "—"}
+                  </Badge>
+                  <TicketCorrectionForm
+                    ticket={ticket}
+                    field="predicted_severity"
+                    currentValue={displayTicket!.predicted_severity}
+                    label="Severity"
+                    onCorrected={handleCorrected}
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Routing Group</span>
-                <span className="text-xs font-medium flex items-center gap-1 text-foreground">
-                  <Users className="w-3 h-3 text-primary" />
-                  {ticket.predicted_team ?? "—"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium flex items-center gap-1 text-foreground">
+                    <Users className="w-3 h-3 text-primary" />
+                    {displayTicket!.predicted_team ?? "—"}
+                  </span>
+                  <TicketCorrectionForm
+                    ticket={ticket}
+                    field="predicted_team"
+                    currentValue={displayTicket!.predicted_team}
+                    label="Routing Group"
+                    onCorrected={handleCorrected}
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Business Impact</span>
-                <span className="text-xs font-medium text-foreground">{ticket.business_impact?.split(" - ")[0] ?? "—"}</span>
+                <span className="text-xs font-medium text-foreground">{displayTicket!.business_impact?.split(" - ")[0] ?? "—"}</span>
               </div>
             </div>
           </section>
@@ -117,7 +177,7 @@ export function AIInsightsPanel({ ticket, onClose }: AIInsightsPanelProps) {
               <div className="flex items-end justify-between mb-2">
                 <span className="text-3xl font-bold font-mono text-primary">{confidencePct}%</span>
                 <span className="text-[10px] text-muted-foreground">
-                  {confidencePct >= 90 ? "High Confidence" : confidencePct >= 75 ? "Moderate" : "Low Confidence"}
+                  {confidencePct >= 90 ? "High Confidence" : confidencePct >= 75 ? "Moderate" : "Low — Review Recommended"}
                 </span>
               </div>
               <Progress value={confidencePct} className="h-2" />
@@ -130,7 +190,7 @@ export function AIInsightsPanel({ ticket, onClose }: AIInsightsPanelProps) {
               Business Impact Assessment
             </h3>
             <div className="bg-muted/50 border border-border rounded-md p-3">
-              <p className="text-xs text-foreground/80">{ticket.business_impact ?? "No impact assessment available"}</p>
+              <p className="text-xs text-foreground/80">{displayTicket!.business_impact ?? "No impact assessment available"}</p>
             </div>
           </section>
 

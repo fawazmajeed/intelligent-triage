@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, BarChart3 } from "lucide-react";
+import { Loader2, BarChart3, MessageSquareWarning } from "lucide-react";
 import { useMemo } from "react";
+import { FeedbackAnalytics } from "@/components/FeedbackAnalytics";
 
 const SEVERITY_COLORS: Record<string, string> = {
   Critical: "hsl(0, 72%, 55%)",
@@ -106,6 +109,20 @@ export default function Analytics() {
           Triage performance metrics — {tickets?.length ?? 0} tickets from your organization
         </p>
       </div>
+
+      <Tabs defaultValue="performance" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="performance" className="text-xs">
+            <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value="feedback" className="text-xs">
+            <MessageSquareWarning className="w-3.5 h-3.5 mr-1.5" />
+            AI Feedback Loop
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="performance" className="mt-4">
 
       {isEmpty ? (
         <Card>
@@ -211,6 +228,12 @@ export default function Analytics() {
           </motion.div>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="feedback" className="mt-4">
+          <FeedbackAnalytics />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -5,14 +5,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { sourceIcons, severityClass, type Ticket } from "@/lib/mock-data";
 import { AIInsightsPanel } from "./AIInsightsPanel";
-import { CheckCircle2, Clock, Search, X } from "lucide-react";
+import { CheckCircle2, Clock, Search, X, MessageSquareWarning } from "lucide-react";
+
+const CONFIDENCE_REVIEW_THRESHOLD = 0.75;
 
 export function TriageTable() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showReviewOnly, setShowReviewOnly] = useState(false);
 
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["tickets"],
@@ -28,8 +32,15 @@ export function TriageTable() {
     refetchInterval: 10000,
   });
 
+  const reviewCount = useMemo(() => {
+    return (tickets ?? []).filter((t) => (t.confidence_score ?? 0) < CONFIDENCE_REVIEW_THRESHOLD).length;
+  }, [tickets]);
+
   const ticketList = useMemo(() => {
-    const all = tickets ?? [];
+    let all = tickets ?? [];
+    if (showReviewOnly) {
+      all = all.filter((t) => (t.confidence_score ?? 0) < CONFIDENCE_REVIEW_THRESHOLD);
+    }
     if (!searchQuery.trim()) return all;
     const q = searchQuery.toLowerCase();
     return all.filter(
@@ -41,7 +52,7 @@ export function TriageTable() {
         (t.predicted_severity ?? "").toLowerCase().includes(q) ||
         t.source_system.toLowerCase().includes(q)
     );
-  }, [tickets, searchQuery]);
+  }, [tickets, searchQuery, showReviewOnly]);
 
   if (isLoading) {
     return (
@@ -57,15 +68,28 @@ export function TriageTable() {
     <>
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-border space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
               <h2 className="text-sm font-semibold text-foreground">Live Triage Queue</h2>
               <span className="text-xs text-muted-foreground font-mono hidden sm:inline">
-                ({ticketList.length}{searchQuery ? ` of ${tickets?.length ?? 0}` : ""} incidents)
+                ({ticketList.length}{searchQuery || showReviewOnly ? ` of ${tickets?.length ?? 0}` : ""} incidents)
               </span>
             </div>
-            <Badge variant="outline" className="text-[10px] font-mono hidden sm:inline-flex">Auto-refresh: 30s</Badge>
+            <div className="flex items-center gap-2">
+              {reviewCount > 0 && (
+                <Button
+                  variant={showReviewOnly ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 text-[10px] gap-1.5"
+                  onClick={() => setShowReviewOnly(!showReviewOnly)}
+                >
+                  <MessageSquareWarning className="w-3 h-3" />
+                  Review Queue ({reviewCount})
+                </Button>
+              )}
+              <Badge variant="outline" className="text-[10px] font-mono hidden sm:inline-flex">Auto-refresh: 30s</Badge>
+            </div>
           </div>
           {/* Search bar */}
           <div className="relative">
