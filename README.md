@@ -27,6 +27,9 @@ TriageFlow AI is a multi-tool automation platform that unifies your ITSM ecosyst
 | Feature | Description |
 |---------|-------------|
 | **AI-Powered Ticket Classification** | Automatically categorize, assign severity, and route tickets to the right team using AI trained on your org's data. |
+| **Self-Learning Feedback Loop** | Correct AI predictions inline → corrections auto-feed as training examples → model accuracy improves over time. |
+| **Confidence-Based Review Queue** | Tickets below 75% confidence are flagged for mandatory human review before syncing back to ITSM. |
+| **Feedback Analytics Dashboard** | Track correction rates, accuracy trends, and top misclassification patterns to measure AI improvement. |
 | **9 ITSM Platform Integrations** | Connect Jira SM, ServiceNow, Zendesk, Freshservice, ManageEngine, Zoho Desk, BMC Helix, SolarWinds, and HaloITSM. |
 | **Live Triage Queue** | Real-time dashboard with full-text search, confidence scores, severity badges, and sync status. |
 | **AI Insights Panel** | Click any ticket to see full AI analysis — category, severity, team, business impact, confidence score, and raw REST payloads. |
@@ -120,10 +123,67 @@ When you click a ticket in the Live Queue, a detail panel slides open showing:
    - Business Impact (e.g., "Revenue Loss — Active customers leaving")
 4. **AI Confidence Score** — Large percentage display with progress bar
 5. **Business Impact Assessment** — Detailed explanation of organizational impact
-6. **Raw Webhook Input** — Expandable JSON showing the inbound webhook payload
-7. **Raw API Response (Outbound)** — Expandable JSON showing the PATCH/PUT request sent back to the source ITSM tool, including endpoint URL, headers, body, and sync status
+6. **Inline Correction Form** — Override any AI prediction (category, severity, team) with the correct value. Corrections are automatically saved as training examples for future AI accuracy.
+7. **Raw Webhook Input** — Expandable JSON showing the inbound webhook payload
+8. **Raw API Response (Outbound)** — Expandable JSON showing the PATCH/PUT request sent back to the source ITSM tool, including endpoint URL, headers, body, and sync status
 
-> **Pro Tip:** Use the raw payload sections to debug integration issues or verify that the correct fields are being sent back to your ITSM platform.
+> **Pro Tip:** Use the raw payload sections to debug integration issues. Use the correction form to teach the AI — every correction makes the model smarter for your organization.
+
+### 4. AI Feedback Loop & Self-Learning
+
+TriageFlow AI continuously improves through a closed-loop feedback system:
+
+#### How It Works
+
+```
+Ticket Ingested → AI Classifies → User Reviews → Correction Submitted
+                                                        ↓
+                                    Training Example Created (org_training_examples)
+                                                        ↓
+                                    Next AI Classification Uses Updated Examples
+                                                        ↓
+                                    Accuracy Improves → Fewer Corrections Needed
+```
+
+#### Inline Corrections
+
+1. Open any ticket from the Live Queue
+2. In the AI Insights Panel, scroll to **Correct This Classification**
+3. Override the **Category**, **Severity**, and/or **Team** fields with the correct values
+4. Click **Submit Correction** — the correction is saved and immediately added to your org's training data
+5. Future tickets with similar descriptions will be classified more accurately
+
+#### Review Queue (Low-Confidence Tickets)
+
+- Tickets with AI confidence **below 75%** are automatically flagged
+- Click the **Review Queue** button in the Live Queue header to filter these tickets
+- Review and correct flagged tickets to rapidly improve AI accuracy on edge cases
+- The review count badge updates in real-time as new low-confidence tickets arrive
+
+#### Feedback Analytics
+
+Navigate to **Analytics → AI Feedback Loop** tab to monitor:
+
+| Metric | What It Shows |
+|--------|--------------|
+| **Total Corrections** | Number of user corrections submitted |
+| **Accuracy Rate** | Percentage of tickets that needed no correction |
+| **Avg. Confidence** | Mean AI confidence score across all tickets |
+| **Top 3 Corrected Categories** | Categories most frequently overridden by users |
+| **Accuracy Over Time** | 14-day trend chart showing AI accuracy improvement |
+| **Corrections by Category** | Bar chart revealing which categories the AI struggles with most |
+
+> **Key Insight:** A declining correction rate over time means the feedback loop is working — the AI is learning from your team's expertise.
+
+#### Why This Matters
+
+| Without Feedback Loop | With Feedback Loop |
+|----------------------|-------------------|
+| Static AI accuracy | Continuously improving accuracy |
+| Same mistakes repeated | Mistakes corrected permanently |
+| Generic classifications | Org-specific classifications |
+| No visibility into AI quality | Full analytics on AI performance |
+| Manual retraining required | Self-learning from daily workflow |
 
 ### 4. Integration Hub
 
@@ -171,14 +231,18 @@ whatever is wrong on your end immediately. I'm not calling the helpdesk to
 wait on hold for 20 minutes. Just fix it.
 ```
 
-### 5. Analytics Dashboard
+### 6. Analytics Dashboard
 
-The Analytics page provides four real-time charts based on your organization's ticket data:
+The Analytics page provides two tabs:
+
+**Tab 1: Ticket Analytics** — Four real-time charts based on your organization's ticket data:
 
 1. **Tickets by Category** — Bar chart showing distribution across AI-predicted categories
 2. **Severity Distribution** — Donut/pie chart with color-coded severity breakdown (Critical, High, Medium, Low)
 3. **Daily Trend — Volume & Confidence** — Dual-line chart showing ticket volume and average AI confidence over the last 14 days
 4. **Tickets by Source Platform** — Horizontal bar chart showing which ITSM tools are generating the most traffic
+
+**Tab 2: AI Feedback Loop** — Feedback analytics (see [AI Feedback Loop](#4-ai-feedback-loop--self-learning) above)
 
 > Charts auto-refresh every 10 seconds. If you see "No ticket data yet," go to the Integration Hub and simulate some traffic first.
 
@@ -473,15 +537,17 @@ src/
 ├── components/              # Reusable UI components
 │   ├── ui/                  # shadcn/ui primitives (button, card, dialog, etc.)
 │   ├── AIConfigSection.tsx  # AI training data management (categories, teams, CSV upload)
-│   ├── AIInsightsPanel.tsx  # Ticket detail slide-out with AI analysis + raw payloads
+│   ├── AIInsightsPanel.tsx  # Ticket detail slide-out with AI analysis + correction form
 │   ├── AppLayout.tsx        # Main app shell (sidebar + outlet)
 │   ├── AppSidebar.tsx       # Navigation sidebar with role-based menu items
+│   ├── FeedbackAnalytics.tsx # AI feedback loop dashboard (accuracy trends, corrections)
 │   ├── MetricsRibbon.tsx    # KPI metrics strip (tickets, confidence, hours saved)
 │   ├── NavLink.tsx          # Active-aware navigation link
 │   ├── PlatformDetailDialog.tsx  # Platform setup dialog with auto-sync toggle
 │   ├── ProtectedRoute.tsx   # Auth guard for protected pages
 │   ├── ROICalculator.tsx    # Interactive ROI estimation tool
-│   ├── TriageTable.tsx      # Live triage queue with search and ticket rows
+│   ├── TicketCorrectionForm.tsx # Inline AI prediction correction form
+│   ├── TriageTable.tsx      # Live triage queue with search, review queue filter
 │   └── TrialBanner.tsx      # Trial/license status banner
 ├── contexts/
 │   └── AuthContext.tsx      # Authentication context (user, org, trial, license state)
@@ -495,14 +561,14 @@ src/
 ├── pages/
 │   ├── Index.tsx            # Live Queue dashboard (home)
 │   ├── IntegrationHub.tsx   # Platform connections, simulate traffic, test tickets
-│   ├── Analytics.tsx        # Charts dashboard (category, severity, trends, sources)
+│   ├── Analytics.tsx        # Charts dashboard + AI feedback loop analytics
 │   ├── Settings.tsx         # Currency, triage time, AI config, license, outbound API
 │   ├── Admin.tsx            # Admin panel (system admin) / My License (standard users)
 │   ├── Auth.tsx             # Login / signup page
 │   ├── Expired.tsx          # Trial expired redirect
 │   └── NotFound.tsx         # 404 page
 └── integrations/
-    └── supabase/            # Auto-generated Supabase client & types
+    └── supabase/            # Auto-generated client & types
 
 supabase/
 ├── config.toml              # Project configuration
