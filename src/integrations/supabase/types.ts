@@ -257,6 +257,7 @@ export type Database = {
           id: string
           organization_id: string
           preferred_currency: string
+          standard_triage_minutes: number
         }
         Insert: {
           auth_id: string
@@ -265,6 +266,7 @@ export type Database = {
           id?: string
           organization_id: string
           preferred_currency?: string
+          standard_triage_minutes?: number
         }
         Update: {
           auth_id?: string
@@ -273,6 +275,7 @@ export type Database = {
           id?: string
           organization_id?: string
           preferred_currency?: string
+          standard_triage_minutes?: number
         }
         Relationships: [
           {

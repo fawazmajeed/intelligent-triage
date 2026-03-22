@@ -1,0 +1,1 @@
+ALTER TABLE public.users ADD COLUMN standard_triage_minutes integer NOT NULL DEFAULT 8;
