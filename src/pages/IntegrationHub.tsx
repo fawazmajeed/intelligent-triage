@@ -123,7 +123,7 @@ export default function IntegrationHub() {
     try {
       const promises = Array.from({ length: count }).map(() => {
         const desc = sampleDescriptions[Math.floor(Math.random() * sampleDescriptions.length)];
-        const source = sources[Math.floor(Math.random() * sources.length)];
+        const source = activeSources[Math.floor(Math.random() * activeSources.length)];
 
         return supabase.functions.invoke("categorize-ticket", {
           body: {
