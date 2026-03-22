@@ -123,10 +123,67 @@ When you click a ticket in the Live Queue, a detail panel slides open showing:
    - Business Impact (e.g., "Revenue Loss — Active customers leaving")
 4. **AI Confidence Score** — Large percentage display with progress bar
 5. **Business Impact Assessment** — Detailed explanation of organizational impact
-6. **Raw Webhook Input** — Expandable JSON showing the inbound webhook payload
-7. **Raw API Response (Outbound)** — Expandable JSON showing the PATCH/PUT request sent back to the source ITSM tool, including endpoint URL, headers, body, and sync status
+6. **Inline Correction Form** — Override any AI prediction (category, severity, team) with the correct value. Corrections are automatically saved as training examples for future AI accuracy.
+7. **Raw Webhook Input** — Expandable JSON showing the inbound webhook payload
+8. **Raw API Response (Outbound)** — Expandable JSON showing the PATCH/PUT request sent back to the source ITSM tool, including endpoint URL, headers, body, and sync status
 
-> **Pro Tip:** Use the raw payload sections to debug integration issues or verify that the correct fields are being sent back to your ITSM platform.
+> **Pro Tip:** Use the raw payload sections to debug integration issues. Use the correction form to teach the AI — every correction makes the model smarter for your organization.
+
+### 4. AI Feedback Loop & Self-Learning
+
+TriageFlow AI continuously improves through a closed-loop feedback system:
+
+#### How It Works
+
+```
+Ticket Ingested → AI Classifies → User Reviews → Correction Submitted
+                                                        ↓
+                                    Training Example Created (org_training_examples)
+                                                        ↓
+                                    Next AI Classification Uses Updated Examples
+                                                        ↓
+                                    Accuracy Improves → Fewer Corrections Needed
+```
+
+#### Inline Corrections
+
+1. Open any ticket from the Live Queue
+2. In the AI Insights Panel, scroll to **Correct This Classification**
+3. Override the **Category**, **Severity**, and/or **Team** fields with the correct values
+4. Click **Submit Correction** — the correction is saved and immediately added to your org's training data
+5. Future tickets with similar descriptions will be classified more accurately
+
+#### Review Queue (Low-Confidence Tickets)
+
+- Tickets with AI confidence **below 75%** are automatically flagged
+- Click the **Review Queue** button in the Live Queue header to filter these tickets
+- Review and correct flagged tickets to rapidly improve AI accuracy on edge cases
+- The review count badge updates in real-time as new low-confidence tickets arrive
+
+#### Feedback Analytics
+
+Navigate to **Analytics → AI Feedback Loop** tab to monitor:
+
+| Metric | What It Shows |
+|--------|--------------|
+| **Total Corrections** | Number of user corrections submitted |
+| **Accuracy Rate** | Percentage of tickets that needed no correction |
+| **Avg. Confidence** | Mean AI confidence score across all tickets |
+| **Top 3 Corrected Categories** | Categories most frequently overridden by users |
+| **Accuracy Over Time** | 14-day trend chart showing AI accuracy improvement |
+| **Corrections by Category** | Bar chart revealing which categories the AI struggles with most |
+
+> **Key Insight:** A declining correction rate over time means the feedback loop is working — the AI is learning from your team's expertise.
+
+#### Why This Matters
+
+| Without Feedback Loop | With Feedback Loop |
+|----------------------|-------------------|
+| Static AI accuracy | Continuously improving accuracy |
+| Same mistakes repeated | Mistakes corrected permanently |
+| Generic classifications | Org-specific classifications |
+| No visibility into AI quality | Full analytics on AI performance |
+| Manual retraining required | Self-learning from daily workflow |
 
 ### 4. Integration Hub
 
