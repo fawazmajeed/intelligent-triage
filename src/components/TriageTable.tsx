@@ -68,15 +68,28 @@ export function TriageTable() {
     <>
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-border space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
               <h2 className="text-sm font-semibold text-foreground">Live Triage Queue</h2>
               <span className="text-xs text-muted-foreground font-mono hidden sm:inline">
-                ({ticketList.length}{searchQuery ? ` of ${tickets?.length ?? 0}` : ""} incidents)
+                ({ticketList.length}{searchQuery || showReviewOnly ? ` of ${tickets?.length ?? 0}` : ""} incidents)
               </span>
             </div>
-            <Badge variant="outline" className="text-[10px] font-mono hidden sm:inline-flex">Auto-refresh: 30s</Badge>
+            <div className="flex items-center gap-2">
+              {reviewCount > 0 && (
+                <Button
+                  variant={showReviewOnly ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 text-[10px] gap-1.5"
+                  onClick={() => setShowReviewOnly(!showReviewOnly)}
+                >
+                  <MessageSquareWarning className="w-3 h-3" />
+                  Review Queue ({reviewCount})
+                </Button>
+              )}
+              <Badge variant="outline" className="text-[10px] font-mono hidden sm:inline-flex">Auto-refresh: 30s</Badge>
+            </div>
           </div>
           {/* Search bar */}
           <div className="relative">
