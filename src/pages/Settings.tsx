@@ -72,6 +72,24 @@ export default function Settings() {
     }
   };
 
+  const handleTriageMinutesChange = async () => {
+    if (!userProfile || triageMinutes < 1 || triageMinutes > 60) return;
+    setSavingTriage(true);
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ standard_triage_minutes: triageMinutes } as any)
+        .eq("auth_id", user!.id);
+      if (error) throw error;
+      await refreshProfile();
+      toast({ title: "Triage time updated", description: `Standard triage time set to ${triageMinutes} min/ticket.` });
+    } catch (err: any) {
+      toast({ title: "Failed to update", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingTriage(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-[900px]">
       <div>
