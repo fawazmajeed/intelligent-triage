@@ -39,7 +39,7 @@ export function ROICalculator() {
     }
   }, [ticketCount, initialized]);
 
-  const minutesSaved = volume * 8;
+  const minutesSaved = volume * triageMinutes;
   const hoursSaved = minutesSaved / 60;
   const moneySaved = hoursSaved * rate;
   const fteSaved = (hoursSaved / 160).toFixed(1);
