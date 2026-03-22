@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import IntegrationHub from "./pages/IntegrationHub";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Expired from "./pages/Expired";
 import NotFound from "./pages/NotFound";
