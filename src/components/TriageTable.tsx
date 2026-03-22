@@ -5,10 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { sourceIcons, severityClass, type Ticket } from "@/lib/mock-data";
 import { AIInsightsPanel } from "./AIInsightsPanel";
-import { CheckCircle2, Clock, Search, X } from "lucide-react";
+import { CheckCircle2, Clock, Search, X, MessageSquareWarning } from "lucide-react";
+
+const CONFIDENCE_REVIEW_THRESHOLD = 0.75;
 
 export function TriageTable() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
