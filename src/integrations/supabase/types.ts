@@ -181,6 +181,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_corrections: {
+        Row: {
+          corrected_by: string
+          corrected_value: string
+          created_at: string
+          field_name: string
+          id: string
+          organization_id: string
+          original_value: string | null
+          ticket_id: string
+        }
+        Insert: {
+          corrected_by: string
+          corrected_value: string
+          created_at?: string
+          field_name: string
+          id?: string
+          organization_id: string
+          original_value?: string | null
+          ticket_id: string
+        }
+        Update: {
+          corrected_by?: string
+          corrected_value?: string
+          created_at?: string
+          field_name?: string
+          id?: string
+          organization_id?: string
+          original_value?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_corrections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_corrections_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           business_impact: string | null
