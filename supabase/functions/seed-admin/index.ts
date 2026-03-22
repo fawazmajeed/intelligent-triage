@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     });
 
     const adminEmail = "admin@triageflow.ai";
-    const adminPassword = "admin";
+    const adminPassword = "admin1";
 
     // Check if admin already exists by trying to sign in
     const { data: signInData, error: signInError } =
