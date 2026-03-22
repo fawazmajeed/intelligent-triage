@@ -228,6 +228,12 @@ export default function Analytics() {
           </motion.div>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="feedback" className="mt-4">
+          <FeedbackAnalytics />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
