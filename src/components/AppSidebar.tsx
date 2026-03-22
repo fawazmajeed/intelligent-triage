@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Activity, Zap, BarChart3, Settings, Shield, Radio, LogOut, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Activity, Zap, BarChart3, Settings, Shield, Radio, LogOut, Menu, X, ShieldCheck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { title: "Live Queue", url: "/", icon: Radio },
