@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,6 +12,134 @@ import { AIInsightsPanel } from "./AIInsightsPanel";
 import { CheckCircle2, Clock, Search, X, MessageSquareWarning } from "lucide-react";
 
 const CONFIDENCE_REVIEW_THRESHOLD = 0.75;
+
+function DesktopTableWithTopScroll({
+  ticketList,
+  setSelectedTicket,
+}: {
+  ticketList: Ticket[];
+  setSelectedTicket: (t: Ticket) => void;
+}) {
+  const topBarRef = useRef<HTMLDivElement>(null);
+  const tableWrapRef = useRef<HTMLDivElement>(null);
+  const [scrollWidth, setScrollWidth] = useState(0);
+
+  const syncScroll = useCallback((source: "top" | "table") => {
+    const top = topBarRef.current;
+    const table = tableWrapRef.current;
+    if (!top || !table) return;
+    if (source === "top") {
+      table.scrollLeft = top.scrollLeft;
+    } else {
+      top.scrollLeft = table.scrollLeft;
+    }
+  }, []);
+
+  useEffect(() => {
+    const table = tableWrapRef.current;
+    if (!table) return;
+    const update = () => setScrollWidth(table.scrollWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(table);
+    return () => ro.disconnect();
+  }, [ticketList]);
+
+  return (
+    <div className="hidden md:block">
+      {/* Sticky top scrollbar */}
+      <div
+        ref={topBarRef}
+        onScroll={() => syncScroll("top")}
+        className="overflow-x-auto sticky top-0 z-10 bg-card border-b border-border"
+        style={{ scrollbarWidth: "thin" }}
+      >
+        <div style={{ width: scrollWidth, height: 1 }} />
+      </div>
+      {/* Actual table */}
+      <div
+        ref={tableWrapRef}
+        onScroll={() => syncScroll("table")}
+        className="overflow-x-auto"
+        style={{ scrollbarWidth: "none" }}
+      >
+        <style>{`.triage-table-wrap::-webkit-scrollbar { display: none; }`}</style>
+        <div className="triage-table-wrap">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[80px]">ID</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[100px]">Source</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold">Description</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[130px]">Category</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[100px]">Severity</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[100px]">Confidence</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[90px]">Sync</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ticketList.map((ticket, i) => (
+                <motion.tr
+                  key={ticket.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.02 }}
+                  className="border-b border-border cursor-pointer transition-colors hover:bg-muted/50 group"
+                  onClick={() => setSelectedTicket(ticket)}
+                >
+                  <TableCell className="font-mono text-xs text-primary font-medium">
+                    {ticket.id.slice(0, 8)}
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs flex items-center gap-1.5">
+                      <span>{sourceIcons[ticket.source_system] ?? "⚪"}</span>
+                      {ticket.source_system}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-xs text-foreground/80 truncate max-w-[300px]">{ticket.raw_description}</p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="text-[10px] font-mono">{ticket.predicted_category ?? "—"}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${severityClass[ticket.predicted_severity ?? ""] ?? ""}`}>
+                      {ticket.predicted_severity ?? "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full"
+                          style={{ width: `${(ticket.confidence_score ?? 0) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground">
+                        {ticket.confidence_score ? Math.round(ticket.confidence_score * 100) + "%" : "—"}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {ticket.synced_back_to_source ? (
+                      <span className="flex items-center gap-1 text-success text-[10px] font-medium">
+                        <CheckCircle2 className="w-3 h-3" /> Synced
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-warning text-[10px] font-medium">
+                        <Clock className="w-3 h-3" /> Pending
+                      </span>
+                    )}
+                  </TableCell>
+                </motion.tr>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function TriageTable() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -117,79 +245,11 @@ export function TriageTable() {
           </div>
         ) : (
           <>
-            {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[80px]">ID</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[100px]">Source</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-semibold">Description</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[130px]">Category</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[100px]">Severity</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[100px]">Confidence</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-semibold w-[90px]">Sync</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ticketList.map((ticket, i) => (
-                    <motion.tr
-                      key={ticket.id}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.02 }}
-                      className="border-b border-border cursor-pointer transition-colors hover:bg-muted/50 group"
-                      onClick={() => setSelectedTicket(ticket)}
-                    >
-                      <TableCell className="font-mono text-xs text-primary font-medium">
-                        {ticket.id.slice(0, 8)}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs flex items-center gap-1.5">
-                          <span>{sourceIcons[ticket.source_system] ?? "⚪"}</span>
-                          {ticket.source_system}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-xs text-foreground/80 truncate max-w-[300px]">{ticket.raw_description}</p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="text-[10px] font-mono">{ticket.predicted_category ?? "—"}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${severityClass[ticket.predicted_severity ?? ""] ?? ""}`}>
-                          {ticket.predicted_severity ?? "—"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary rounded-full"
-                              style={{ width: `${(ticket.confidence_score ?? 0) * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] font-mono text-muted-foreground">
-                            {ticket.confidence_score ? Math.round(ticket.confidence_score * 100) + "%" : "—"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {ticket.synced_back_to_source ? (
-                          <span className="flex items-center gap-1 text-success text-[10px] font-medium">
-                            <CheckCircle2 className="w-3 h-3" /> Synced
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1 text-warning text-[10px] font-medium">
-                            <Clock className="w-3 h-3" /> Pending
-                          </span>
-                        )}
-                      </TableCell>
-                    </motion.tr>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            {/* Desktop table with top sticky scrollbar */}
+            <DesktopTableWithTopScroll
+              ticketList={ticketList}
+              setSelectedTicket={setSelectedTicket}
+            />
 
             {/* Mobile card list */}
             <div className="md:hidden divide-y divide-border">
