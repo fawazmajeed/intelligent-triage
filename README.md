@@ -27,6 +27,9 @@ TriageFlow AI is a multi-tool automation platform that unifies your ITSM ecosyst
 | Feature | Description |
 |---------|-------------|
 | **AI-Powered Ticket Classification** | Automatically categorize, assign severity, and route tickets to the right team using AI trained on your org's data. |
+| **Self-Learning Feedback Loop** | Correct AI predictions inline → corrections auto-feed as training examples → model accuracy improves over time. |
+| **Confidence-Based Review Queue** | Tickets below 75% confidence are flagged for mandatory human review before syncing back to ITSM. |
+| **Feedback Analytics Dashboard** | Track correction rates, accuracy trends, and top misclassification patterns to measure AI improvement. |
 | **9 ITSM Platform Integrations** | Connect Jira SM, ServiceNow, Zendesk, Freshservice, ManageEngine, Zoho Desk, BMC Helix, SolarWinds, and HaloITSM. |
 | **Live Triage Queue** | Real-time dashboard with full-text search, confidence scores, severity badges, and sync status. |
 | **AI Insights Panel** | Click any ticket to see full AI analysis — category, severity, team, business impact, confidence score, and raw REST payloads. |
