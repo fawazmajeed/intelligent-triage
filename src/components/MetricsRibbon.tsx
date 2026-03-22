@@ -4,12 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrency } from "@/hooks/use-currency";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function MetricsRibbon() {
   const { formatCurrency } = useCurrency();
+  const { userProfile } = useAuth();
+  const triageMinutes = userProfile?.standard_triage_minutes ?? 8;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["ticket-metrics"],
+    queryKey: ["ticket-metrics", triageMinutes],
     queryFn: async () => {
       const { count } = await supabase
         .from("tickets")
@@ -24,7 +27,7 @@ export function MetricsRibbon() {
       const avgConfidence = scores && scores.length > 0
         ? scores.reduce((sum, t) => sum + (t.confidence_score ?? 0), 0) / scores.length
         : 0;
-      const hoursSaved = totalTickets * 0.065;
+      const hoursSaved = (totalTickets * triageMinutes) / 60;
 
       return { totalTickets, avgConfidence, hoursSaved };
     },
