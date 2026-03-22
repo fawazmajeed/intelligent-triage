@@ -14,6 +14,15 @@ const navItems = [
 export function AppSidebar() {
   const { user, signOut, isLicensed } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as any }).then(({ data }) => {
+        setIsAdmin(!!data);
+      });
+    }
+  }, [user]);
 
   const sidebarContent = (
     <>
