@@ -15,7 +15,7 @@ export function ROICalculator() {
   const triageMinutes = userProfile?.standard_triage_minutes ?? 8;
 
   const { data: ticketCount, isLoading } = useQuery({
-    queryKey: ["ticket-count-roi"],
+    queryKey: ["ticket-count-roi", triageMinutes],
     queryFn: async () => {
       const now = new Date();
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
