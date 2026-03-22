@@ -106,8 +106,18 @@ export default function IntegrationHub() {
       toast({ title: "No organization found", description: "Please log in again.", variant: "destructive" });
       return;
     }
+
+    // Only use sources that are actively connected
+    const activeSources = platformDefs
+      .filter((p) => activeConnections?.[p.source]?.is_active)
+      .map((p) => p.source);
+
+    if (activeSources.length === 0) {
+      toast({ title: "No active integrations", description: "Enable at least one platform's Auto-Sync before simulating traffic.", variant: "destructive" });
+      return;
+    }
+
     setSimulating(true);
-    const sources = ["Jira", "ServiceNow", "Zendesk", "Freshservice", "ManageEngine", "ZohoDesk", "BMCHelix", "SolarWinds", "HaloITSM"];
     const count = 3 + Math.floor(Math.random() * 3);
 
     try {
