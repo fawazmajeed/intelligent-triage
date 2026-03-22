@@ -16,6 +16,7 @@ const CONFIDENCE_REVIEW_THRESHOLD = 0.75;
 export function TriageTable() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showReviewOnly, setShowReviewOnly] = useState(false);
 
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["tickets"],
