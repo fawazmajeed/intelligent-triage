@@ -292,6 +292,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_organizations: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          is_licensed: boolean
+          license_key: string | null
+          name: string
+          trial_expires_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "organizations"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_list_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          organization_id: string
+        }[]
+      }
+      admin_revoke_license: { Args: { _org_id: string }; Returns: undefined }
+      admin_set_license_key: {
+        Args: { _license_key: string; _org_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
