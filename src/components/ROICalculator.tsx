@@ -81,7 +81,7 @@ export function ROICalculator() {
               </div>
               <div className="space-y-1.5 font-mono">
                 <p><span className="text-foreground font-medium">Cost Savings</span> = Hours Recovered × Hourly Rate</p>
-                <p><span className="text-foreground font-medium">Hours Recovered</span> = (Tickets × 8 min) ÷ 60</p>
+                <p><span className="text-foreground font-medium">Hours Recovered</span> = (Tickets × {triageMinutes} min) ÷ 60</p>
                 <p><span className="text-foreground font-medium">FTE Equivalent</span> = Hours Recovered ÷ 160 hrs/month</p>
               </div>
               <div className="border-t border-border pt-1.5 mt-1.5 space-y-1 text-[10px]">
