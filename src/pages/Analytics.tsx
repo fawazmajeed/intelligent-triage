@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, BarChart3 } from "lucide-react";
+import { Loader2, BarChart3, MessageSquareWarning } from "lucide-react";
 import { useMemo } from "react";
+import { FeedbackAnalytics } from "@/components/FeedbackAnalytics";
 
 const SEVERITY_COLORS: Record<string, string> = {
   Critical: "hsl(0, 72%, 55%)",
