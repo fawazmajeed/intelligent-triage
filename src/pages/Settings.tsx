@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Key, Globe, Shield, CheckCircle, Loader2, Coins } from "lucide-react";
+import { Save, Key, Globe, Shield, CheckCircle, Loader2, Coins, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,8 @@ export default function Settings() {
   const [licenseKey, setLicenseKey] = useState("");
   const [activating, setActivating] = useState(false);
   const [savingCurrency, setSavingCurrency] = useState(false);
+  const [savingTriage, setSavingTriage] = useState(false);
+  const [triageMinutes, setTriageMinutes] = useState<number>(userProfile?.standard_triage_minutes ?? 8);
 
   const handleSave = () => {
     toast({ title: "Configuration saved", description: "Outbound API settings updated successfully." });
@@ -67,6 +69,24 @@ export default function Settings() {
       toast({ title: "Failed to update currency", description: err.message, variant: "destructive" });
     } finally {
       setSavingCurrency(false);
+    }
+  };
+
+  const handleTriageMinutesChange = async () => {
+    if (!userProfile || triageMinutes < 1 || triageMinutes > 60) return;
+    setSavingTriage(true);
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ standard_triage_minutes: triageMinutes } as any)
+        .eq("auth_id", user!.id);
+      if (error) throw error;
+      await refreshProfile();
+      toast({ title: "Triage time updated", description: `Standard triage time set to ${triageMinutes} min/ticket.` });
+    } catch (err: any) {
+      toast({ title: "Failed to update", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingTriage(false);
     }
   };
 
@@ -112,6 +132,48 @@ export default function Settings() {
               </div>
               {savingCurrency && <Loader2 className="w-4 h-4 animate-spin text-primary mt-5" />}
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Standard Triage Time */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.015 }}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />
+              <CardTitle className="text-sm">Standard Triage Time</CardTitle>
+            </div>
+            <CardDescription className="text-xs">
+              Set your organization's average manual triage time per ticket. This value is used in ROI calculations. Industry default is 8 minutes.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">Minutes per Ticket</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={triageMinutes}
+                  onChange={(e) => setTriageMinutes(Number(e.target.value) || 1)}
+                  className="font-mono text-sm bg-muted/50 border-border h-9 w-32"
+                />
+              </div>
+              <Button
+                onClick={handleTriageMinutesChange}
+                disabled={savingTriage || triageMinutes === (userProfile?.standard_triage_minutes ?? 8)}
+                size="sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {savingTriage && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                Save
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Typical values: 2–5 min (mature orgs with runbooks), 8 min (industry average), 10–15 min (complex environments).
+            </p>
           </CardContent>
         </Card>
       </motion.div>

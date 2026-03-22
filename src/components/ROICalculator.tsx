@@ -6,10 +6,13 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/use-currency";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function ROICalculator() {
   const { formatCurrency, currency } = useCurrency();
+  const { userProfile } = useAuth();
   const [showHelp, setShowHelp] = useState(false);
+  const triageMinutes = userProfile?.standard_triage_minutes ?? 8;
 
   const { data: ticketCount, isLoading } = useQuery({
     queryKey: ["ticket-count-roi"],
@@ -36,7 +39,7 @@ export function ROICalculator() {
     }
   }, [ticketCount, initialized]);
 
-  const minutesSaved = volume * 8;
+  const minutesSaved = volume * triageMinutes;
   const hoursSaved = minutesSaved / 60;
   const moneySaved = hoursSaved * rate;
   const fteSaved = (hoursSaved / 160).toFixed(1);
@@ -78,11 +81,11 @@ export function ROICalculator() {
               </div>
               <div className="space-y-1.5 font-mono">
                 <p><span className="text-foreground font-medium">Cost Savings</span> = Hours Recovered × Hourly Rate</p>
-                <p><span className="text-foreground font-medium">Hours Recovered</span> = (Tickets × 8 min) ÷ 60</p>
+                <p><span className="text-foreground font-medium">Hours Recovered</span> = (Tickets × {triageMinutes} min) ÷ 60</p>
                 <p><span className="text-foreground font-medium">FTE Equivalent</span> = Hours Recovered ÷ 160 hrs/month</p>
               </div>
               <div className="border-t border-border pt-1.5 mt-1.5 space-y-1 text-[10px]">
-                <p>• <span className="text-foreground">8 min/ticket</span> — ITSM industry average for L1 manual triage (read, categorize, set priority, assign team).</p>
+                <p>• <span className="text-foreground">{triageMinutes} min/ticket</span> — {triageMinutes === 8 ? "ITSM industry average for" : "Your configured time for"} L1 manual triage (read, categorize, set priority, assign team). Configurable in Settings.</p>
                 <p>• <span className="text-foreground">160 hrs/month</span> — Standard full-time equivalent (40 hrs/week × 4 weeks).</p>
                 <p>• Ticket volume is pre-filled from your actual last 30 days of data.</p>
               </div>

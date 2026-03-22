@@ -16,6 +16,7 @@ interface UserProfile {
   email: string;
   organization_id: string;
   preferred_currency: string;
+  standard_triage_minutes: number;
 }
 
 interface AuthContextType {
