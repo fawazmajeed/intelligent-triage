@@ -85,7 +85,7 @@ export function ROICalculator() {
                 <p><span className="text-foreground font-medium">FTE Equivalent</span> = Hours Recovered ÷ 160 hrs/month</p>
               </div>
               <div className="border-t border-border pt-1.5 mt-1.5 space-y-1 text-[10px]">
-                <p>• <span className="text-foreground">8 min/ticket</span> — ITSM industry average for L1 manual triage (read, categorize, set priority, assign team).</p>
+                <p>• <span className="text-foreground">{triageMinutes} min/ticket</span> — {triageMinutes === 8 ? "ITSM industry average for" : "Your configured time for"} L1 manual triage (read, categorize, set priority, assign team). Configurable in Settings.</p>
                 <p>• <span className="text-foreground">160 hrs/month</span> — Standard full-time equivalent (40 hrs/week × 4 weeks).</p>
                 <p>• Ticket volume is pre-filled from your actual last 30 days of data.</p>
               </div>
