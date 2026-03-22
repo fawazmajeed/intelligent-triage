@@ -56,15 +56,18 @@ function DesktopTableWithTopScroll({
       >
         <div style={{ width: scrollWidth, height: 1 }} />
       </div>
-      {/* Actual table */}
+      {/* Actual table – hide its native scrollbar */}
       <div
         ref={tableWrapRef}
         onScroll={() => syncScroll("table")}
         className="overflow-x-auto"
-        style={{ scrollbarWidth: "none" }}
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
       >
-        <style>{`.triage-table-wrap::-webkit-scrollbar { display: none; }`}</style>
-        <div className="triage-table-wrap">
+        <style>{`
+          .triage-table-no-scroll::-webkit-scrollbar { display: none; }
+          .triage-table-no-scroll .relative.w-full.overflow-auto { overflow: visible !important; }
+        `}</style>
+        <div className="triage-table-no-scroll">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
