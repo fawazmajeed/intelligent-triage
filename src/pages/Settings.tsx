@@ -26,6 +26,8 @@ export default function Settings() {
   const [licenseKey, setLicenseKey] = useState("");
   const [activating, setActivating] = useState(false);
   const [savingCurrency, setSavingCurrency] = useState(false);
+  const [savingTriage, setSavingTriage] = useState(false);
+  const [triageMinutes, setTriageMinutes] = useState<number>(userProfile?.standard_triage_minutes ?? 8);
 
   const handleSave = () => {
     toast({ title: "Configuration saved", description: "Outbound API settings updated successfully." });
