@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Activity, Zap, BarChart3, Settings, Shield, Radio, LogOut, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Activity, Zap, BarChart3, Settings, Shield, Radio, LogOut, Menu, X, ShieldCheck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { title: "Live Queue", url: "/", icon: Radio },
@@ -13,6 +14,15 @@ const navItems = [
 export function AppSidebar() {
   const { user, signOut, isLicensed } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as any }).then(({ data }) => {
+        setIsAdmin(!!data);
+      });
+    }
+  }, [user]);
 
   const sidebarContent = (
     <>
@@ -46,6 +56,20 @@ export function AppSidebar() {
             )}
           </NavLink>
         ))}
+        {isAdmin && (
+          <>
+            <p className="text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 mb-2 mt-4">Admin</p>
+            <NavLink
+              to="/admin"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-150"
+              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+              onClick={() => setMobileOpen(false)}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Admin Panel</span>
+            </NavLink>
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t border-sidebar-border space-y-3">
