@@ -42,41 +42,32 @@ function generateLicenseKey(): string {
   return `TF-${parts.join("-")}`;
 }
 
+const SYSTEM_ADMIN_EMAIL = "admin@triageflow.ai";
+
 export default function Admin() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, organization, isLicensed, isTrialExpired, trialDaysLeft } = useAuth();
   const [orgs, setOrgs] = useState<OrgRow[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [licenseDialog, setLicenseDialog] = useState<{ open: boolean; org: OrgRow | null }>({ open: false, org: null });
   const [generatedKey, setGeneratedKey] = useState("");
   const [activating, setActivating] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
 
+  const isSystemAdmin = user?.email === SYSTEM_ADMIN_EMAIL;
+
   useEffect(() => {
-    checkAdminAndLoad();
+    if (!user) return;
+    if (isSystemAdmin) {
+      loadData().then(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
-  const checkAdminAndLoad = async () => {
-    if (!user) return;
-    setLoading(true);
-
-    // Check admin role
-    const { data: roleCheck } = await supabase.rpc("has_role", {
-      _user_id: user.id,
-      _role: "admin" as any,
-    });
-
-    setIsAdmin(!!roleCheck);
-
-    if (roleCheck) {
-      await loadData();
-    }
-    setLoading(false);
-  };
-
   const loadData = async () => {
+    setLoading(true);
     const [orgRes, userRes] = await Promise.all([
       supabase.rpc("admin_list_organizations"),
       supabase.rpc("admin_list_users"),
@@ -84,6 +75,7 @@ export default function Admin() {
 
     if (orgRes.data) setOrgs(orgRes.data as OrgRow[]);
     if (userRes.data) setUsers(userRes.data as UserRow[]);
+    setLoading(false);
   };
 
   const openLicenseDialog = (org: OrgRow) => {
@@ -136,25 +128,72 @@ export default function Admin() {
     );
   }
 
-  if (!isAdmin) {
+  // Non-system-admin users: show only their own license status
+  if (!isSystemAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md">
+      <div className="p-4 md:p-6 space-y-6 max-w-[900px]">
+        <div>
+          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" /> My License
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">View your organization's license status</p>
+        </div>
+
+        <Card className={isLicensed ? "border-primary/30" : isTrialExpired ? "border-destructive/30" : ""}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <Shield className="w-5 h-5" /> Access Denied
-            </CardTitle>
-            <CardDescription>You do not have admin privileges to access this page.</CardDescription>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Key className="w-4 h-4 text-primary" /> License Status
+              </CardTitle>
+              {isLicensed ? (
+                <Badge className="bg-success/15 text-success border-success/30 text-[10px]">
+                  <CheckCircle className="w-3 h-3 mr-1" /> Licensed
+                </Badge>
+              ) : isTrialExpired ? (
+                <Badge variant="destructive" className="text-[10px]">Trial Expired</Badge>
+              ) : (
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                  {trialDaysLeft} days left
+                </Badge>
+              )}
+            </div>
+            <CardDescription className="text-xs">
+              {isLicensed
+                ? "Your license is active. Full access with no expiry."
+                : isTrialExpired
+                ? "Your trial has expired. Contact your administrator for a license key."
+                : `You're on a free trial. ${trialDaysLeft} days remaining. Contact your administrator for a permanent license.`
+              }
+            </CardDescription>
           </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Organization</span>
+              <span className="font-medium text-foreground">{organization?.name ?? "—"}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Account</span>
+              <span className="font-mono text-xs text-foreground">{user?.email}</span>
+            </div>
+            {isLicensed && organization?.license_key && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">License Key</span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {organization.license_key.slice(0, 4)}••••••••{organization.license_key.slice(-4)}
+                </span>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     );
   }
 
+  // System admin view: full organization & user management
   const getUsersForOrg = (orgId: string) => users.filter((u) => u.organization_id === orgId);
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-6 space-y-6 max-w-[1400px]">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -164,7 +203,7 @@ export default function Admin() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Manage organizations and license keys</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { setLoading(true); loadData().then(() => setLoading(false)); }}>
+          <Button variant="outline" size="sm" onClick={() => loadData()}>
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
         </div>

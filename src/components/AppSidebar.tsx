@@ -18,9 +18,7 @@ export function AppSidebar() {
 
   useEffect(() => {
     if (user) {
-      supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as any }).then(({ data }) => {
-        setIsAdmin(!!data);
-      });
+      setIsAdmin(user.email === "admin@triageflow.ai");
     }
   }, [user]);
 
