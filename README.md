@@ -231,14 +231,18 @@ whatever is wrong on your end immediately. I'm not calling the helpdesk to
 wait on hold for 20 minutes. Just fix it.
 ```
 
-### 5. Analytics Dashboard
+### 6. Analytics Dashboard
 
-The Analytics page provides four real-time charts based on your organization's ticket data:
+The Analytics page provides two tabs:
+
+**Tab 1: Ticket Analytics** — Four real-time charts based on your organization's ticket data:
 
 1. **Tickets by Category** — Bar chart showing distribution across AI-predicted categories
 2. **Severity Distribution** — Donut/pie chart with color-coded severity breakdown (Critical, High, Medium, Low)
 3. **Daily Trend — Volume & Confidence** — Dual-line chart showing ticket volume and average AI confidence over the last 14 days
 4. **Tickets by Source Platform** — Horizontal bar chart showing which ITSM tools are generating the most traffic
+
+**Tab 2: AI Feedback Loop** — Feedback analytics (see [AI Feedback Loop](#4-ai-feedback-loop--self-learning) above)
 
 > Charts auto-refresh every 10 seconds. If you see "No ticket data yet," go to the Integration Hub and simulate some traffic first.
 
