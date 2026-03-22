@@ -32,8 +32,15 @@ export function TriageTable() {
     refetchInterval: 10000,
   });
 
+  const reviewCount = useMemo(() => {
+    return (tickets ?? []).filter((t) => (t.confidence_score ?? 0) < CONFIDENCE_REVIEW_THRESHOLD).length;
+  }, [tickets]);
+
   const ticketList = useMemo(() => {
-    const all = tickets ?? [];
+    let all = tickets ?? [];
+    if (showReviewOnly) {
+      all = all.filter((t) => (t.confidence_score ?? 0) < CONFIDENCE_REVIEW_THRESHOLD);
+    }
     if (!searchQuery.trim()) return all;
     const q = searchQuery.toLowerCase();
     return all.filter(
@@ -45,7 +52,7 @@ export function TriageTable() {
         (t.predicted_severity ?? "").toLowerCase().includes(q) ||
         t.source_system.toLowerCase().includes(q)
     );
-  }, [tickets, searchQuery]);
+  }, [tickets, searchQuery, showReviewOnly]);
 
   if (isLoading) {
     return (
