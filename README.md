@@ -537,15 +537,17 @@ src/
 ├── components/              # Reusable UI components
 │   ├── ui/                  # shadcn/ui primitives (button, card, dialog, etc.)
 │   ├── AIConfigSection.tsx  # AI training data management (categories, teams, CSV upload)
-│   ├── AIInsightsPanel.tsx  # Ticket detail slide-out with AI analysis + raw payloads
+│   ├── AIInsightsPanel.tsx  # Ticket detail slide-out with AI analysis + correction form
 │   ├── AppLayout.tsx        # Main app shell (sidebar + outlet)
 │   ├── AppSidebar.tsx       # Navigation sidebar with role-based menu items
+│   ├── FeedbackAnalytics.tsx # AI feedback loop dashboard (accuracy trends, corrections)
 │   ├── MetricsRibbon.tsx    # KPI metrics strip (tickets, confidence, hours saved)
 │   ├── NavLink.tsx          # Active-aware navigation link
 │   ├── PlatformDetailDialog.tsx  # Platform setup dialog with auto-sync toggle
 │   ├── ProtectedRoute.tsx   # Auth guard for protected pages
 │   ├── ROICalculator.tsx    # Interactive ROI estimation tool
-│   ├── TriageTable.tsx      # Live triage queue with search and ticket rows
+│   ├── TicketCorrectionForm.tsx # Inline AI prediction correction form
+│   ├── TriageTable.tsx      # Live triage queue with search, review queue filter
 │   └── TrialBanner.tsx      # Trial/license status banner
 ├── contexts/
 │   └── AuthContext.tsx      # Authentication context (user, org, trial, license state)
@@ -559,14 +561,14 @@ src/
 ├── pages/
 │   ├── Index.tsx            # Live Queue dashboard (home)
 │   ├── IntegrationHub.tsx   # Platform connections, simulate traffic, test tickets
-│   ├── Analytics.tsx        # Charts dashboard (category, severity, trends, sources)
+│   ├── Analytics.tsx        # Charts dashboard + AI feedback loop analytics
 │   ├── Settings.tsx         # Currency, triage time, AI config, license, outbound API
 │   ├── Admin.tsx            # Admin panel (system admin) / My License (standard users)
 │   ├── Auth.tsx             # Login / signup page
 │   ├── Expired.tsx          # Trial expired redirect
 │   └── NotFound.tsx         # 404 page
 └── integrations/
-    └── supabase/            # Auto-generated Supabase client & types
+    └── supabase/            # Auto-generated client & types
 
 supabase/
 ├── config.toml              # Project configuration
