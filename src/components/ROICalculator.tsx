@@ -6,10 +6,13 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/use-currency";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function ROICalculator() {
   const { formatCurrency, currency } = useCurrency();
+  const { userProfile } = useAuth();
   const [showHelp, setShowHelp] = useState(false);
+  const triageMinutes = userProfile?.standard_triage_minutes ?? 8;
 
   const { data: ticketCount, isLoading } = useQuery({
     queryKey: ["ticket-count-roi"],
