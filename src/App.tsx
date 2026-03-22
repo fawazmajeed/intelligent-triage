@@ -31,6 +31,7 @@ const App = () => (
               <Route path="/integrations" element={<IntegrationHub />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/admin" element={<Admin />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
