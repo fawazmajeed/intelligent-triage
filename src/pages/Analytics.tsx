@@ -110,6 +110,20 @@ export default function Analytics() {
         </p>
       </div>
 
+      <Tabs defaultValue="performance" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="performance" className="text-xs">
+            <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value="feedback" className="text-xs">
+            <MessageSquareWarning className="w-3.5 h-3.5 mr-1.5" />
+            AI Feedback Loop
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="performance" className="mt-4">
+
       {isEmpty ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
