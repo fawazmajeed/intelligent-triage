@@ -21,6 +21,12 @@ import {
   Brain,
   Clock,
   TrendingUp,
+  RefreshCw,
+  MessageSquareWarning,
+  Calculator,
+  Users,
+  Target,
+  GitBranch,
 } from "lucide-react";
 
 const PLATFORMS = [
@@ -39,22 +45,32 @@ const FEATURES = [
   {
     icon: Brain,
     title: "AI-Powered Triage",
-    desc: "Automatically categorize, prioritize, and route tickets using contextual AI — no manual rules.",
+    desc: "Automatically categorize, prioritize, and route tickets using contextual AI trained on your organization's data — no manual rules needed.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Self-Learning Feedback Loop",
+    desc: "Every human correction becomes training data. The AI learns YOUR reality over time — correction rates drop as accuracy climbs.",
+  },
+  {
+    icon: Calculator,
+    title: "Real-Time ROI Calculator",
+    desc: "See actual hours saved, FTE equivalents, and dollar values — not just 'efficiency.' Pre-filled from your live ticket data.",
   },
   {
     icon: Layers,
     title: "Multi-Platform Unification",
-    desc: "Connect 9+ ITSM tools into a single pane of glass. One dashboard for all your ticket queues.",
+    desc: "Jira for dev, ServiceNow for support, Zendesk for customers? One triage layer across all 9+ ITSM tools.",
   },
   {
-    icon: Zap,
-    title: "Zero-Config Intelligence",
-    desc: "Upload historical data or let AI learn from your custom categories. No model training needed.",
+    icon: MessageSquareWarning,
+    title: "Human-in-the-Loop Review",
+    desc: "Low-confidence tickets (< 75%) are flagged for human review. No black-box guessing — operators stay in control.",
   },
   {
-    icon: TrendingUp,
-    title: "ROI from Day One",
-    desc: "See real-time cost savings with built-in ROI calculator. Justify automation with hard numbers.",
+    icon: BarChart3,
+    title: "Feedback Analytics Dashboard",
+    desc: "Track correction rates, misclassification patterns, and AI accuracy trends. See exactly where the model needs more training.",
   },
 ];
 
@@ -71,6 +87,33 @@ const QUEUE_PREVIEW = [
   { id: "INC-4823", desc: "Printer queue stalled on 3rd floor", severity: "Low", team: "Desktop Support", confidence: 88 },
   { id: "INC-4824", desc: "SAP module timeout during payroll run", severity: "Critical", team: "ERP Support", confidence: 94 },
   { id: "INC-4825", desc: "New hire laptop provisioning request", severity: "Medium", team: "Asset Mgmt", confidence: 85 },
+];
+
+const FEEDBACK_LOOP_STEPS = [
+  {
+    step: "01",
+    icon: Zap,
+    title: "AI Predicts",
+    desc: "Incoming ticket is auto-categorized with severity, team routing, and confidence score in under 2 seconds.",
+  },
+  {
+    step: "02",
+    icon: MessageSquareWarning,
+    title: "Human Reviews",
+    desc: "Low-confidence tickets get flagged. Operators correct category, severity, or routing with one click.",
+  },
+  {
+    step: "03",
+    icon: GitBranch,
+    title: "Correction Stored",
+    desc: "Every correction is captured as a training example — what the AI predicted vs. what the expert chose.",
+  },
+  {
+    step: "04",
+    icon: Target,
+    title: "Model Improves",
+    desc: "Next prediction uses your corrections. Correction rates decline weekly. Your AI gets smarter with every ticket.",
+  },
 ];
 
 export default function Auth() {
@@ -161,7 +204,8 @@ export default function Auth() {
                 </h1>
                 <p className="text-muted-foreground text-base leading-relaxed max-w-lg">
                   Stop switching between ServiceNow, Jira, and Zendesk. TriageFlow AI unifies your ticket queues,
-                  auto-categorizes incidents, and routes them to the right team — in under 2 seconds.
+                  auto-categorizes incidents, and routes them to the right team — in under 2 seconds. With a self-learning
+                  feedback loop that gets smarter from every correction.
                 </p>
               </div>
 
@@ -267,7 +311,12 @@ export default function Auth() {
                   </div>
                   {!isLogin && (
                     <div className="mt-4 space-y-1.5">
-                      {["7-day free trial", "Connect unlimited ITSM tools", "AI categorization from day one"].map((t) => (
+                      {[
+                        "7-day free trial",
+                        "Connect unlimited ITSM tools",
+                        "Self-learning feedback loop included",
+                        "Real-time ROI visibility from day one",
+                      ].map((t) => (
                         <div key={t} className="flex items-center gap-2 text-xs text-muted-foreground">
                           <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
                           {t}
@@ -290,7 +339,7 @@ export default function Auth() {
           </Badge>
           <h2 className="text-2xl font-bold text-foreground">See AI Triage in Action</h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-            Every ticket is instantly categorized, severity-assessed, and routed — no human rules engine needed.
+            Every ticket is instantly categorized, severity-assessed, and routed — with confidence scoring and human review flags.
           </p>
         </div>
 
@@ -336,15 +385,103 @@ export default function Auth() {
         </Card>
       </div>
 
+      {/* ─── Feedback Loop Section ─── */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="text-center mb-8">
+          <Badge className="bg-primary/10 text-primary border-primary/20 font-mono text-[10px] uppercase tracking-wider mb-3">
+            <RefreshCw className="w-3 h-3 mr-1" /> Continuous Learning
+          </Badge>
+          <h2 className="text-2xl font-bold text-foreground">The Feedback Loop That Actually Works</h2>
+          <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
+            Most AI tools learn from generic data. TriageFlow learns from YOUR team's corrections — 
+            every fix makes the next prediction better.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-4">
+          {FEEDBACK_LOOP_STEPS.map((s, i) => (
+            <div key={s.step} className="relative p-5 rounded-lg border border-border/50 bg-card/40 backdrop-blur-sm">
+              <div className="text-[40px] font-bold text-primary/10 font-mono absolute top-3 right-4">{s.step}</div>
+              <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
+                <s.icon className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">{s.title}</h3>
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{s.desc}</p>
+              {i < FEEDBACK_LOOP_STEPS.length - 1 && (
+                <div className="hidden md:block absolute top-1/2 -right-3 text-primary/40">
+                  <ArrowRight className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Feedback loop value props */}
+        <div className="mt-8 grid md:grid-cols-3 gap-4">
+          <div className="text-center p-4 rounded-lg bg-card/40 border border-border/50">
+            <p className="text-2xl font-bold text-primary font-mono">↓ Week-over-Week</p>
+            <p className="text-xs text-muted-foreground mt-1">Correction rates decline as AI learns your patterns</p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-card/40 border border-border/50">
+            <p className="text-2xl font-bold text-primary font-mono">0 Black Boxes</p>
+            <p className="text-xs text-muted-foreground mt-1">See exactly what was corrected, when, and by whom</p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-card/40 border border-border/50">
+            <p className="text-2xl font-bold text-primary font-mono">Full Audit Trail</p>
+            <p className="text-xs text-muted-foreground mt-1">Misclassification patterns and training data — all visible</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── ROI Section ─── */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="text-center mb-8">
+          <Badge className="bg-primary/10 text-primary border-primary/20 font-mono text-[10px] uppercase tracking-wider mb-3">
+            <Calculator className="w-3 h-3 mr-1" /> ROI Visibility
+          </Badge>
+          <h2 className="text-2xl font-bold text-foreground">Show the CFO Real Numbers</h2>
+          <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
+            No more staring at a blank screen when asked "What's the ROI?" Built-in calculator 
+            pre-filled from your live ticket data — hours saved, FTE equivalents, and dollar values.
+          </p>
+        </div>
+
+        <Card className="border-border/60 bg-card/60 backdrop-blur-sm overflow-hidden max-w-2xl mx-auto">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="text-xl font-bold text-primary font-mono">$46,667</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Monthly Savings</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/30 border border-border/50">
+                  <p className="text-xl font-bold text-foreground font-mono">667h</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Hours Recovered</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/30 border border-border/50">
+                  <p className="text-xl font-bold text-foreground font-mono">4.2</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">FTE Equivalent</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] text-muted-foreground font-mono">
+                  Based on 5,000 tickets/month · 8 min/ticket · $70/hr avg rate · Fully configurable in Settings
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* ─── Features Grid ─── */}
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-foreground">Why Teams Switch to TriageFlow</h2>
+          <h2 className="text-2xl font-bold text-foreground">Everything You Need for Smarter Triage</h2>
           <p className="text-sm text-muted-foreground mt-2">
-            Replace fragmented rule engines with a single intelligent automation layer.
+            Not a replacement for your ITSM tools — an intelligent layer that makes them work better together.
           </p>
         </div>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map((f) => (
             <Card key={f.title} className="border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/30 transition-colors group">
               <CardContent className="p-5 flex gap-4">
@@ -372,19 +509,19 @@ export default function Auth() {
               step: "01",
               icon: Layers,
               title: "Connect Your ITSM Tools",
-              desc: "Toggle on your platforms — ServiceNow, Jira, Zendesk, and more. Webhooks are pre-configured.",
+              desc: "Toggle on your platforms — ServiceNow, Jira, Zendesk, and more. Webhook endpoints are pre-configured for each.",
             },
             {
               step: "02",
-              icon: BarChart3,
-              title: "Upload Historical Data",
-              desc: "Drop a CSV of past tickets. The AI learns your team's categories, routing patterns, and severity levels.",
+              icon: Users,
+              title: "Test & Train",
+              desc: "Submit test tickets manually or simulate traffic. Upload historical data. The AI learns your categories and routing patterns.",
             },
             {
               step: "03",
               icon: Shield,
-              title: "Watch AI Triage Live",
-              desc: "New tickets are auto-classified and routed in real-time. Operators correct edge cases — AI gets smarter.",
+              title: "Triage & Improve",
+              desc: "New tickets are auto-classified in real-time. Review low-confidence flags, correct edge cases — the feedback loop does the rest.",
             },
           ].map((s) => (
             <div key={s.step} className="relative p-5 rounded-lg border border-border/50 bg-card/40 backdrop-blur-sm">
@@ -399,12 +536,37 @@ export default function Auth() {
         </div>
       </div>
 
+      {/* ─── What This Is NOT ─── */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-foreground">What This is NOT</h2>
+            <p className="text-xs text-muted-foreground mt-1">Full transparency — we believe in honest R&D</p>
+          </div>
+          <div className="space-y-3">
+            {[
+              { text: "A pitch to throw away your current ITSM tools", detail: "It's an augmentation layer, not a replacement" },
+              { text: "Hype noise claiming AI will solve everything", detail: "Human-in-the-loop is baked in by design" },
+              { text: "A black box with no visibility", detail: "Every prediction, correction, and metric is fully transparent" },
+            ].map((item) => (
+              <div key={item.text} className="flex items-start gap-3 p-3 rounded-lg bg-card/40 border border-border/50">
+                <span className="text-destructive text-sm mt-0.5">✕</span>
+                <div>
+                  <p className="text-sm text-foreground font-medium">{item.text}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ─── Footer CTA ─── */}
       <div className="max-w-6xl mx-auto px-6 py-12 text-center">
         <div className="p-8 rounded-xl border border-primary/20 bg-primary/5 backdrop-blur-sm">
-          <h2 className="text-xl font-bold text-foreground mb-2">Ready to automate your incident triage?</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">Ready to make your Monday mornings a little more chill?</h2>
           <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-            Join IT teams who reduced manual triage by 73% and cut mean-time-to-resolution in half.
+            Join IT teams who reduced manual triage by 73%, with a feedback loop that gets smarter every week.
           </p>
           <Button
             onClick={() => {
@@ -417,7 +579,7 @@ export default function Auth() {
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-6 font-mono">
-          © 2026 TriageFlow AI · Enterprise-grade ITSM automation
+          © 2026 TriageFlow AI · R&D-driven ITSM automation · Built with 16 years of service desk experience
         </p>
       </div>
     </div>
